@@ -12,11 +12,10 @@ const configUtils = require("./utils/configUtils");
 
 const app = express();
 dotenv.config();
+configUtils.checkEnvVariables();
 
 const LISTEN_PORT = process.env.LISTEN_PORT ?? 5000;
 const MONGO_URI = process.env.MONGO_URI;
-
-configUtils.checkEnvVariables();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

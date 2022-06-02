@@ -19,6 +19,16 @@ exports.authentifyToken = async function (req, res) {
 
     let authData = { authentic: payload ? true : false };
     if (!payload) return res.status(200).json(authData);
+
+    if (
+      "mediaAuthorizations" in req.body &&
+      req.body.mediaAuthorizations &&
+      Array.isArray(req.body.mediaAuthorizations) &&
+      req.body.mediaAuthorizations.length > 0
+    ) {
+    }
+
+    return res.status(200).json(authData);
   } catch (err) {
     res.status(500).json("Internal Server Error");
     console.log(err);
