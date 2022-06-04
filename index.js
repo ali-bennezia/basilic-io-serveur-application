@@ -22,6 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 
 //Routage.
 
+app.use("/api/auth", require("./routers/authRouter"));
 app.use("/api/users/params", require("./routers/utilisateurParamsRouter"));
 app.use("/api/users", require("./routers/utilisateurRouter"));
 

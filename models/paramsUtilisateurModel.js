@@ -8,7 +8,7 @@ const schema = new mongoose.Schema({
     unique: true,
   },
   nomPublic: { type: String, required: false },
-  profilePublic: { type: Boolean, required: false },
+  profilePublic: { type: Boolean, required: false }, //Si cette variable n'est pas présente sur un document, l'on présume que le profil est public.
   photoProfil: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Media",

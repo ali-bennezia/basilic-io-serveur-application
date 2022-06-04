@@ -91,3 +91,39 @@ exports.overwriteAndAddObjectProperties = function (
 
   return overwrittenObject;
 };
+
+/*
+  Vérifie si l'objet envoyé:
+   - existe bien,
+   - est bien un array,
+   - ne contient bien que des chaines de charactères,
+   - à une longueur inférieure à la limite fixée à la configuration pour la liste des demandes d'authorization d'accès aux médias.
+*/
+exports.sanitizeMediaAuthorizationObject = function (object) {
+  if (
+    object &&
+    Array.isArray(object) &&
+    object.mediaAuthorizations.length <=
+      parseInt(
+        process.env.MAX_TOKEN_MEDIA_AUTHORIZATION_AUTHENTIFICATION_REQUESTS ??
+          24
+      )
+  ) {
+    let nonStringFound = false;
+    for (let el of object) {
+      if (!(el instanceof String || typeof el == "string")) return false;
+    }
+    return true;
+  }
+  return false;
+};
+
+exports.trimMediaAuthorizationObject = function (object) {
+  if (!sanitizeMediaAuthorizationObject(object))
+    throw "L'objet envoyé en argument ne représente pas une liste d'authentifications d'authorizations d'accès aux médias.";
+  let maxLength = parseInt(
+    process.env.MAX_TOKEN_MEDIA_AUTHORIZATION_AUTHENTIFICATION_REQUESTS ?? 24
+  );
+  if (object.length > maxLength) object = object.splice(0, maxLength);
+  return object;
+};
