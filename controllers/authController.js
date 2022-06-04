@@ -10,16 +10,14 @@ const mediaUtils = require("./../utils/mediaUtils");
 // POST /api/auth/token/authentify
 exports.authentifyToken = async function (req, res) {
   try {
-    console.log("Demande d'authentification de token reçue.");
     if (!"token" in req.body || !req.body.token) {
-      console.log("Mauvaise requête !");
       return res.status(400).json("Bad Request");
     }
 
     let payload = null;
 
     try {
-      payload = await authUtils.authentifyToken(req.body.token);
+      payload = await authUtils.authentifySessionToken(req.body.token);
     } catch (tokenErr) {}
 
     let authData = { authentic: payload ? true : false };
@@ -36,7 +34,7 @@ exports.authentifyToken = async function (req, res) {
     if (
       "mediaAuthorizations" in req.body &&
       req.body.mediaAuthorizations &&
-      sanitizeMediaAuthorizationObject(req.body.mediaAuthorizations)
+      objectUtils.sanitizeMediaAuthorizationObject(req.body.mediaAuthorizations)
     ) {
       authData.mediaAuthorizations = [];
       let trimedMediaAuths = objectUtils.trimMediaAuthorizationObject(
@@ -46,7 +44,8 @@ exports.authentifyToken = async function (req, res) {
       for (let mediaLink of trimedMediaAuths) {
         authData.mediaAuthorizations.push({
           mediaLink: mediaLink,
-          authorization: mediaUtils.checkUserMediaAccessByUserId(
+          authorization: await mediaUtils.checkUserMediaAccessByUserId(
+            mediaLink,
             payload.userId
           ),
         });
@@ -55,7 +54,7 @@ exports.authentifyToken = async function (req, res) {
 
     return res.status(200).json(authData);
   } catch (err) {
-    res.status(500).json("Internal Server Error");
     console.log(err);
+    return res.status(500).json("Internal Server Error");
   }
 };

@@ -103,7 +103,7 @@ exports.sanitizeMediaAuthorizationObject = function (object) {
   if (
     object &&
     Array.isArray(object) &&
-    object.mediaAuthorizations.length <=
+    object.length <=
       parseInt(
         process.env.MAX_TOKEN_MEDIA_AUTHORIZATION_AUTHENTIFICATION_REQUESTS ??
           24
@@ -119,7 +119,7 @@ exports.sanitizeMediaAuthorizationObject = function (object) {
 };
 
 exports.trimMediaAuthorizationObject = function (object) {
-  if (!sanitizeMediaAuthorizationObject(object))
+  if (!this.sanitizeMediaAuthorizationObject(object))
     throw "L'objet envoyé en argument ne représente pas une liste d'authentifications d'authorizations d'accès aux médias.";
   let maxLength = parseInt(
     process.env.MAX_TOKEN_MEDIA_AUTHORIZATION_AUTHENTIFICATION_REQUESTS ?? 24
