@@ -44,3 +44,23 @@ mongoose
       `Erreur lors de la tentative de connection à la base de donnée: ${err}`
     );
   });
+
+//Debug
+
+//Création d'un média de test:
+const mediaUtils = require("./utils/mediaUtils");
+
+/*const fileUtils = require("./utils/fileUtils");
+let buffer = fileUtils.readFile("mycat.jpg");
+mediaUtils.createMedia(
+  "public/mycat.jpg",
+  buffer,
+  true,
+  [],
+  "6298e6f62f41d6b04381c47a"
+);*/
+
+//Suppression:
+mediaUtils.removeMediaByLink("private/monmedia.jpg");
+mediaUtils.removeMediaByLink("private/test1.jpg");
+mediaUtils.removeMediaByLink("public/maphoto.jpg");

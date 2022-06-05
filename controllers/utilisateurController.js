@@ -319,8 +319,8 @@ exports.getProfile = async function (req, res) {
     let profileData = { id: user._id, nomUtilisateur: user.nomUtilisateur };
     if ("nomPublic" in userParams && userParams.nomPublic)
       profileData.nomPublic = userParams.nomPublic;
-    if ("profilePublic" in userParams && userParams.profilePublic)
-      profileData.profilePublic = userParams.profilePublic;
+    if ("profilPublic" in userParams && userParams.profilPublic)
+      profileData.profilPublic = userParams.profilPublic;
     if ("photoProfil" in userParams && userParams.photoProfil)
       profileData.photoProfil = userParams.photoProfil;
     if ("banniereProfil" in userParams && userParams.banniereProfil)

@@ -11,7 +11,7 @@ const paramsUtilisateurModel = require("../models/paramsUtilisateurModel");
 
 const updatableParamProperties = [
   "nomPublic",
-  "profilePublic",
+  "profilPublic",
   "photoProfil",
   "banniereProfil",
   "descriptionProfil",

@@ -29,7 +29,7 @@ exports.addUser = async (user) => {
 
   let newUserParams = userParamsModel.create({
     utilisateur: newUser._id,
-    profilePublic: true,
+    profilPublic: true,
   });
 
   return { user: newUser, params: newUserParams };
