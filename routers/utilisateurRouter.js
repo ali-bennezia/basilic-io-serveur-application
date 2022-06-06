@@ -60,7 +60,4 @@ router.delete(
   utilisateurController.deleteUser
 );
 
-// GET /api/users/profiles/get/:id
-router.get("/profiles/get/:id", utilisateurController.getProfile);
-
 module.exports = router;

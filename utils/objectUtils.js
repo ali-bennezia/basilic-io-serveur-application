@@ -118,12 +118,19 @@ exports.sanitizeMediaAuthorizationObject = function (object) {
   return false;
 };
 
+exports.trimArray = function (arr, maxLength) {
+  if (!Array.isArray(arr))
+    throw "L'object envoyé en argument n'est pas une liste.";
+  if (arr.length > maxLength) arr = arr.splice(0, [...maxLength]);
+  return arr;
+};
+
 exports.trimMediaAuthorizationObject = function (object) {
   if (!this.sanitizeMediaAuthorizationObject(object))
     throw "L'objet envoyé en argument ne représente pas une liste d'authentifications d'authorizations d'accès aux médias.";
   let maxLength = parseInt(
-    process.env.MAX_TOKEN_MEDIA_AUTHORIZATION_AUTHENTIFICATION_REQUESTS ?? 24
+    process.env
+      .MAX_TOKEN_MEDIA_AUTHORIZATION_AUTHENTIFICATION_REQUESTS_PER_REQUEST ?? 24
   );
-  if (object.length > maxLength) object = object.splice(0, maxLength);
-  return object;
+  return this.trimArray(object, maxLength);
 };

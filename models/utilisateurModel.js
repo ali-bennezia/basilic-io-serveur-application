@@ -12,7 +12,7 @@ exports.schemaObject = {
   administrateur: { type: Boolean, required: false },
 };
 
-const schema = new mongoose.Schema(this.schemaObject);
+const schema = new mongoose.Schema(this.schemaObject, { timestamps: true });
 
 schema.pre("save", async function () {
   if (this.isModified("motDePasse"))

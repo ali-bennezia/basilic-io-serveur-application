@@ -10,6 +10,7 @@ const userUtils = require("./../utils/userUtils");
 
 //Modèles.
 
+const userModel = require("./../models/utilisateurModel");
 const mediaModel = require("./../models/mediaModel");
 const { generateUserIdSession } = require("./authUtils");
 
@@ -21,6 +22,10 @@ exports.getMediaByLink = async function (mediaLink) {
 
   let media = await mediaModel.findOne({ lien: mediaLink });
   return media;
+};
+
+exports.getMedia = async function (id) {
+  return await mediaModel.findById(id);
 };
 
 exports.checkUserMediaAccessByUserId = async function (mediaLink, userId) {
@@ -42,8 +47,11 @@ exports.createMedia = async function (
 ) {
   if (!mediaLink || !mediaBuffer || !userId) throw "Arguments manquants.";
   if (
-    !(mediaLink instanceof String || typeof mediaLink == "string") &&
-    !(generateUserIdSession instanceof String || typeof userId == "string")
+    (!(mediaLink instanceof String || typeof mediaLink == "string") &&
+      !(
+        generateUserIdSession instanceof String || typeof userId == "string"
+      )) ||
+    !(await userModel.model.exists({ _id: userId }))
   )
     throw "Arguments invalides.";
 
@@ -111,6 +119,44 @@ exports.removeMediaByLink = async (mediaLink) => {
       url: `http://${
         process.env.MEDIA_SERVER_ADRESS
       }/api/medias/delete/${encodeURIComponent(mediaLink)}`,
+    });
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
+  return true;
+};
+
+exports.removeMediasByLinks = async function (...mediaLinks) {
+  try {
+    let mediaIds = (await mediaModel.find({ lien: { $in: mediaLinks } })).map(
+      (el) => el._id
+    );
+
+    await mediaModel.deleteMany({ _id: { $in: mediaIds } });
+    await axios({
+      method: "post",
+      url: `http://${process.env.MEDIA_SERVER_ADRESS}/api/medias/deletemany/`,
+      data: { list: mediaLinks },
+    });
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
+  return true;
+};
+
+exports.removeMediasByIds = async function (...mediaIds) {
+  try {
+    let mediaLinks = (await mediaModel.find({ _id: { $in: mediaIds } })).map(
+      (el) => el.lien
+    );
+
+    await mediaModel.deleteMany({ _id: { $in: mediaIds } });
+    await axios({
+      method: "post",
+      url: `http://${process.env.MEDIA_SERVER_ADRESS}/api/medias/deletemany/`,
+      data: { list: mediaLinks },
     });
   } catch (err) {
     console.log(err);

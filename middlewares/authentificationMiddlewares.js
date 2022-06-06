@@ -15,8 +15,15 @@ const extractTokenAndPayload = async (req) => {
 };
 
 exports.noToken = async function (req, res, next) {
-  let token = req.headers.authorization;
-  if (token != undefined) res.status(403).json("Forbidden");
+  let token =
+    "headers" in req
+      ? req.headers
+        ? "authorization" in req.headers
+          ? req.headers.authorization
+          : undefined
+        : undefined
+      : undefined;
+  if (token) res.status(403).json("Forbidden");
   else next();
 };
 

@@ -48,10 +48,25 @@ exports.getUserParamsFromUserId = async (id) => {
   return params;
 };
 
+exports.isUserIdAdmin = async (id) => {
+  if (!(await userModel.model.exists({ _id: id })))
+    throw "L'utilisateur n'existe pas.";
+  let user = await userModel.model.findById(id);
+  return "administrateur" in user ? user.administrateur : false;
+};
+
 //TODO: Supprimer toutes les informations annexes en cascade.
 
+exports.doesUserIdExist = async (id) => {
+  if (!id || !(typeof id != "string" || id instanceof String))
+    throw "L'identifiant envoyé est incorrect.";
+
+  return await userModel.model.exists({ _id: id });
+};
+
 exports.deleteUserFromId = async (id) => {
-  if (!id) throw "L'identifiant envoyé est incorrect.";
+  if (!id || !(typeof id != "string" || id instanceof String))
+    throw "L'identifiant envoyé est incorrect.";
 
   await userParamsModel.findOneAndRemove({
     utilisateur: id,
