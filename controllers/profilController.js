@@ -80,7 +80,7 @@ exports.getProfilePosts = async function (req, res) {
     if (!user || !userParams) return res.status(404).json("Not Found");
 
     let public = "profilPublic" in userParams ? userParams.profilPublic : true;
-
+    console.log(public);
     if (!public) {
       if (
         !"headers" in req ||

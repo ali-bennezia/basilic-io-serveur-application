@@ -63,6 +63,16 @@ exports.removePost = async function (postId) {
   return true;
 };
 
+exports.removePostsFromUserId = async function (userId) {
+  if (!(userId instanceof String || typeof userId == "string"))
+    throw "Argument invalide.";
+  if (!(await userModel.model.exists({ _id: userId })))
+    throw "L'utilisateur n'existe pas.";
+
+  let posts = await postModel.find({ auteur: userId }).exec();
+  for (let el of posts) this.removePost(el._id.toString());
+};
+
 exports.getPostsFromUser = async function (
   userId,
   amount,

@@ -27,4 +27,11 @@ router.put(
   utilisateurParamsController.resetParams
 );
 
+// GET /api/users/params/get/:id
+router.get(
+  "/get/:id",
+  authentificationMiddlewares.checkTokenAuthenticity,
+  utilisateurParamsController.getParams
+);
+
 module.exports = router;

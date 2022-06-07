@@ -52,9 +52,7 @@ mongoose
 const mediaUtils = require("./utils/mediaUtils");
 const postUtils = require("./utils/postUtils");
 
-postUtils.createPost("6298e6f62f41d6b04381c47a", "Salutations", null, [
-  "629d9e02b5ae642d0e5405b4",
-]);
+//postUtils.createPost("629ed4baaae46fc4275d3f9c", "Salutations 2");
 let main = async () => {
   console.log(
     await postUtils.getPostsFromUser(

@@ -5,6 +5,7 @@
 //Utilitaires.
 
 const objectUtils = require("./objectUtils");
+const postUtils = require("./postUtils");
 
 //Modèles.
 
@@ -65,18 +66,29 @@ exports.doesUserIdExist = async (id) => {
 };
 
 exports.deleteUserFromId = async (id) => {
-  if (!id || !(typeof id != "string" || id instanceof String))
+  if (
+    !id ||
+    !(typeof id == "string" || id instanceof String) ||
+    !(await userModel.model.exists({ _id: id }))
+  )
     throw "L'identifiant envoyé est incorrect.";
 
+  //Suppression de tous les posts.
+  postUtils.removePostsFromUserId(id);
+
+  //Suppresion des paramètres.
   await userParamsModel.findOneAndRemove({
     utilisateur: id,
   });
+
+  //Suppresion de l'utilisateur.
   await userModel.model.deleteOne({ _id: id });
 };
 
 exports.deleteUser = async (user) => {
   if (!objectUtils.containsUniqueUserData(user))
     throw "L'objet envoyé ne représente pas un utilisateur.";
+  if (!"_id" in user) throw "L'objet envoyé ne contient pas d'identifiant.";
 
-  await this.deleteUserFromId(user._id);
+  await this.deleteUserFromId(user._id.toString());
 };

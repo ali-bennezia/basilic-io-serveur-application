@@ -180,6 +180,7 @@ exports.getUserData = async function (req, res) {
       numeroTelephone: user.numeroTelephone,
       valide: user.valide,
       administrateur: user.administrateur,
+      createdAt: user.createdAt,
     });
   } catch (err) {
     console.log(err);
@@ -266,10 +267,11 @@ exports.deleteUser = async function (req, res) {
           : null
         : null;
 
+    if (!user) return res.status(404).json("Not Found");
+
     if (
       !"id" in req.params ||
       !req.params.id ||
-      !user ||
       !tokenUser ||
       !"motDePasse" in req.body ||
       !req.body.motDePasse
