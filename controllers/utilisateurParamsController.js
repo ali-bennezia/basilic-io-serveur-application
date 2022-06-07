@@ -55,12 +55,12 @@ exports.patchParams = async function (req, res) {
       return res.status(403).json("Forbidden");
 
     userParams = objectUtils.overwriteAndAddObjectProperties(
-      userParams,
+      userParams._doc,
       req.body.newParams
     );
 
     userParams = await paramsUtilisateurModel.findByIdAndUpdate(
-      { _id: userParams._id },
+      { _id: userParams._id.toString() },
       userParams,
       { new: true }
     );
