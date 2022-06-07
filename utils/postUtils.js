@@ -105,3 +105,8 @@ exports.getPostsFromUser = async function (
       )
       .exec();
 };
+
+exports.doesPostWithIdExist = async (postId) => {
+  if (!objectUtils.isObjectString(postId)) throw "Argument invalide.";
+  return await postModel.exists({ _id: postId });
+};

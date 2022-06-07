@@ -2,7 +2,11 @@
   Utilitaire pour le traitement sur des objets JS.
 */
 
-const { update } = require("../models/paramsUtilisateurModel");
+//Librairies
+
+const mongoose = require("mongoose");
+
+//Implémentations
 
 exports.arrayEqualsArray = (array1, array2) =>
   Array.isArray(array1) &&
@@ -138,6 +142,10 @@ exports.trimMediaAuthorizationObject = function (object) {
 //Vérifier si l'objet object est bien une chaine de charactères.
 exports.isObjectString = (object) =>
   object && (typeof object == "string" || object instanceof String);
+
+//Vérifier si l'objet object est bien une chaine de charactère contenant un identifiant.
+exports.isObjectValidStringId = (object) =>
+  this.isObjectString(object) && mongoose.Types.ObjectId.isValid(object);
 
 //Vérifier si l'objet object est bien une chaine de charactères indiquant un moment précis, un timestamp.
 exports.isStringTimestamp = (object) =>

@@ -59,7 +59,7 @@ exports.isUserIdAdmin = async (id) => {
 //TODO: Supprimer toutes les informations annexes en cascade.
 
 exports.doesUserIdExist = async (id) => {
-  if (!id || !(typeof id != "string" || id instanceof String))
+  if (!objectUtils.isObjectValidStringId(id))
     throw "L'identifiant envoyé est incorrect.";
 
   return await userModel.model.exists({ _id: id });

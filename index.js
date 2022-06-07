@@ -81,3 +81,22 @@ mediaUtils.createMedia(
 /*mediaUtils.removeMediaByLink("private/monmedia.jpg");
 mediaUtils.removeMediaByLink("private/test1.jpg");
 mediaUtils.removeMediaByLink("public/maphoto.jpg");*/
+
+const avisUtils = require("./utils/avisUtils");
+
+/*avisUtils.createAvis(
+  "629ed8fc7c48afad0c583543",
+  "629ee993601725664882b9bf",
+  "like"
+);*/
+
+/*let test = async () => {
+  console.log(await avisUtils.getPostAvis("629ee993601725664882b9bf"));
+};
+
+avisUtils.removeAvisWithUserIdAndPostId(
+  "629ed8fc7c48afad0c583543",
+  "629ee993601725664882b9bf"
+);
+
+test();*/
