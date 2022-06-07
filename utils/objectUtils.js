@@ -134,3 +134,11 @@ exports.trimMediaAuthorizationObject = function (object) {
   );
   return this.trimArray(object, maxLength);
 };
+
+//Vérifier si l'objet object est bien une chaine de charactères.
+exports.isObjectString = (object) =>
+  object && (typeof object == "string" || object instanceof String);
+
+//Vérifier si l'objet object est bien une chaine de charactères indiquant un moment précis, un timestamp.
+exports.isStringTimestamp = (object) =>
+  this.isObjectString(object) && new Date(object).getTime() > 0;

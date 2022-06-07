@@ -68,11 +68,11 @@ exports.getProfilePosts = async function (req, res) {
   try {
     if (
       !["0", "1", "2"].includes(req.params.nature) ||
+      isNaN(req.params.amount) ||
       parseInt(req.params.amount) >
         parseInt(process.env.POSTS_MAX_LOAD_AMOUNT_PER_REQUEST ?? 20)
     )
       return res.status(400).json("Bad Request");
-    console.log(req.params);
 
     let user = await userUtils.getUserFromId(req.params.userId);
     let userParams = await userUtils.getUserParamsFromUserId(req.params.userId);
@@ -80,7 +80,6 @@ exports.getProfilePosts = async function (req, res) {
     if (!user || !userParams) return res.status(404).json("Not Found");
 
     let public = "profilPublic" in userParams ? userParams.profilPublic : true;
-    console.log(public);
     if (!public) {
       if (
         !"headers" in req ||
@@ -103,12 +102,15 @@ exports.getProfilePosts = async function (req, res) {
     let posts = null;
     switch (req.params.nature) {
       case "0":
-        posts = await postUtils.getPostsFromUser(user._id.toString(), 10);
+        posts = await postUtils.getPostsFromUser(
+          user._id.toString(),
+          parseInt(req.params.amount)
+        );
         break;
       case "1":
         posts = await postUtils.getPostsFromUser(
           user._id.toString(),
-          10,
+          parseInt(req.params.amount),
           null,
           {
             "medias.0": { $exists: true },
@@ -118,7 +120,7 @@ exports.getProfilePosts = async function (req, res) {
       case "2":
         posts = await postUtils.getPostsFromUser(
           user._id.toString(),
-          10,
+          parseInt(req.params.amount),
           null,
           {
             postCible: { $exists: true, $ne: null },
@@ -145,8 +147,94 @@ exports.getProfilePosts = async function (req, res) {
   }
 };
 
-//GET /api/profiles/:userId&:nature&:timestamp&:amount
+//GET /api/profiles/posts/:userId&:nature&:timestamp&:amount
 /*
   Récupères une liste de postes d'un utilisateur.
   Si le profil est public, un token authentique doit être reçu qui appartient soit à ce même profil, soit à un administrateur, soit à une personne qui suit le profil.
 */
+exports.getProfilePostsWithTimestamp = async function (req, res) {
+  try {
+    if (
+      !["0", "1", "2"].includes(req.params.nature) ||
+      isNaN(req.params.amount) ||
+      parseInt(req.params.amount) >
+        parseInt(process.env.POSTS_MAX_LOAD_AMOUNT_PER_REQUEST ?? 20) ||
+      !objectUtils.isStringTimestamp(req.params.timestamp)
+    )
+      return res.status(400).json("Bad Request");
+
+    let timestamp = req.params.timestamp;
+
+    let user = await userUtils.getUserFromId(req.params.userId);
+    let userParams = await userUtils.getUserParamsFromUserId(req.params.userId);
+
+    if (!user || !userParams) return res.status(404).json("Not Found");
+
+    let public = "profilPublic" in userParams ? userParams.profilPublic : true;
+    if (!public) {
+      if (
+        !"headers" in req ||
+        !req.headers ||
+        !"authorization" in req.headers ||
+        !req.headers.authorization
+      )
+        return res.status(401).json("Unauthorized");
+      let token = req.headers.authorization.replace("Bearer ", "");
+      let payload = await authUtils.authentifySessionToken(token);
+      if (!payload || !"userId" in payload)
+        return res.status(401).json("Unauthorized");
+      if (
+        !(await userUtils.isUserIdAdmin(payload.userId)) &&
+        payload.userId != user._id &&
+        !(await followUtils.userIdFollows(payload.userId, user._id))
+      )
+        return res.status(403).json("Forbidden");
+    }
+    let posts = null;
+    switch (req.params.nature) {
+      case "0":
+        posts = await postUtils.getPostsFromUser(
+          user._id.toString(),
+          parseInt(req.params.amount),
+          timestamp
+        );
+        break;
+      case "1":
+        posts = await postUtils.getPostsFromUser(
+          user._id.toString(),
+          parseInt(req.params.amount),
+          timestamp,
+          {
+            "medias.0": { $exists: true },
+          }
+        );
+        break;
+      case "2":
+        posts = await postUtils.getPostsFromUser(
+          user._id.toString(),
+          parseInt(req.params.amount),
+          timestamp,
+          {
+            postCible: { $exists: true, $ne: null },
+          }
+        );
+        break;
+    }
+    posts = await Promise.all(
+      posts.map(async (post) => {
+        return {
+          ...post._doc,
+          medias: await Promise.all(
+            post._doc.medias.map(async (mediaId) => {
+              return (await mediaUtils.getMedia(mediaId.toString())).lien;
+            })
+          ),
+        };
+      })
+    );
+    return res.status(200).json(posts);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("Internal Server Error");
+  }
+};
