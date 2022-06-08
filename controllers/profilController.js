@@ -123,6 +123,7 @@ exports.getProfilePosts = async function (req, res) {
       posts.map(async (post) => {
         return {
           ...post._doc,
+          ...(await postUtils.getPostSecondaryData(post._id.toString())),
           medias: await Promise.all(
             post._doc.medias.map(async (mediaId) => {
               return (await mediaUtils.getMedia(mediaId.toString())).lien;
@@ -216,6 +217,7 @@ exports.getProfilePostsWithTimestamp = async function (req, res) {
       posts.map(async (post) => {
         return {
           ...post._doc,
+          ...(await postUtils.getPostSecondaryData(post._id.toString())),
           medias: await Promise.all(
             post._doc.medias.map(async (mediaId) => {
               return (await mediaUtils.getMedia(mediaId.toString())).lien;

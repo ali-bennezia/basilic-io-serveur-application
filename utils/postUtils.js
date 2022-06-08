@@ -7,6 +7,7 @@
 const objectUtils = require("./objectUtils");
 const mediaUtils = require("./mediaUtils");
 const userUtils = require("./userUtils");
+const avisUtils = require("./avisUtils");
 
 //Modèles.
 
@@ -110,10 +111,25 @@ exports.getPostsFromUser = async function (
 };
 
 exports.doesPostWithIdExist = async (postId) => {
-  if (!objectUtils.isObjectString(postId)) throw "Argument invalide.";
+  if (!objectUtils.isObjectValidStringId(postId)) throw "Argument invalide.";
   return await postModel.exists({ _id: postId });
 };
 
 exports.getPostFromId = async (postId) => {
-  return await postModel.findById(postId);
+  return await postModel.findById(postId).lean();
+};
+
+/*Récupère les informations annexes d'un post, c'est à dire:
+  - Le nombre de likes
+  - Le nombre de dislikes
+  - Le nombre de réponses
+*/
+exports.getPostSecondaryData = async (postId) => {
+  if (!objectUtils.isObjectValidStringId(postId)) throw "Argument invalide.";
+  if (!(await postModel.exists({ _id: postId })))
+    throw "Le post ciblé par l'identifiant donné n'existe pas.";
+  return {
+    ...(await avisUtils.getPostAvis(postId)),
+    reponse: await postModel.count({ postCible: postId }),
+  };
 };

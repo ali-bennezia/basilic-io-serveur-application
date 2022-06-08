@@ -73,6 +73,7 @@ exports.createAvis = async (authorUserId, targetPostId, nature) => {
   });
 };
 
+//Envoie le nombre de likes/dislikes d'un post.
 exports.getPostAvis = async (postId) => {
   try {
     if (!objectUtils.isObjectValidStringId(postId))
@@ -123,7 +124,10 @@ exports.getAvisFromUserId = async function (
         await userUtils.getUserFromId(el.auteur.toString()),
         await userUtils.getUserParamsFromUserId(el.auteur.toString())
       ),
-      postCible: await postUtils.getPostFromId(el.postCible.toString()),
+      postCible: {
+        ...(await postUtils.getPostFromId(el.postCible.toString())),
+        ...(await postUtils.getPostSecondaryData(el.postCible.toString())),
+      },
     });
   }
   return result;
