@@ -6,6 +6,7 @@ const authUtils = require("../utils/authUtils");
 const mediaUtils = require("../utils/mediaUtils");
 const followUtils = require("../utils/followUtils");
 const postUtils = require("../utils/postUtils");
+const avisUtils = require("../utils/avisUtils");
 
 //API
 
@@ -34,17 +35,7 @@ exports.getProfile = async function (req, res) {
     if (!"id" in req.params || !req.params.id || !user || !userParams)
       return res.status(400).json("Bad Request");
 
-    let profileData = { id: user._id, nomUtilisateur: user.nomUtilisateur };
-    if ("nomPublic" in userParams && userParams.nomPublic)
-      profileData.nomPublic = userParams.nomPublic;
-    if ("profilPublic" in userParams && userParams.profilPublic)
-      profileData.profilPublic = userParams.profilPublic;
-    if ("photoProfil" in userParams && userParams.photoProfil)
-      profileData.photoProfil = userParams.photoProfil;
-    if ("banniereProfil" in userParams && userParams.banniereProfil)
-      profileData.banniereProfil = userParams.banniereProfil;
-    if ("descriptionProfil" in userParams && userParams.descriptionProfil)
-      profileData.descriptionProfil = userParams.descriptionProfil;
+    let profileData = objectUtils.getUserSummaryProfileData(user, userParams);
 
     return res.status(200).json(profileData);
   } catch (err) {
@@ -151,12 +142,13 @@ exports.getProfilePosts = async function (req, res) {
 /*
   Récupères une liste de postes d'un utilisateur.
   Si le profil est public, un token authentique doit être reçu qui appartient soit à ce même profil, soit à un administrateur, soit à une personne qui suit le profil.
+  Ici, le paramètre timestamp désigne un instant précis. Tout post créé à cet instant ou avant doit être envoyé dans la réponse.
 */
 exports.getProfilePostsWithTimestamp = async function (req, res) {
   try {
     if (
       !["0", "1", "2"].includes(req.params.nature) ||
-      isNaN(req.params.amount) ||
+      isNaN(parseInt(req.params.amount)) ||
       parseInt(req.params.amount) >
         parseInt(process.env.POSTS_MAX_LOAD_AMOUNT_PER_REQUEST ?? 20) ||
       !objectUtils.isStringTimestamp(req.params.timestamp)
@@ -185,8 +177,8 @@ exports.getProfilePostsWithTimestamp = async function (req, res) {
         return res.status(401).json("Unauthorized");
       if (
         !(await userUtils.isUserIdAdmin(payload.userId)) &&
-        payload.userId != user._id &&
-        !(await followUtils.userIdFollows(payload.userId, user._id))
+        payload.userId != user._id.toString() &&
+        !(await followUtils.userIdFollows(payload.userId, user._id.toString()))
       )
         return res.status(403).json("Forbidden");
     }
@@ -233,6 +225,140 @@ exports.getProfilePostsWithTimestamp = async function (req, res) {
       })
     );
     return res.status(200).json(posts);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("Internal Server Error");
+  }
+};
+
+//GET /api/profiles/posts/activities/:userId&:amount
+/*
+  Récupères une liste d'avis d'un utilisateur.
+  Si le profil est privé, un token authentique doit être reçu qui appartient soit à ce même profil, soit à un administrateur, soit à une personne qui suit le profil.
+  Si toutes ces conditions ne sont pas satisfaites, renvoi du code 403 Forbidden.
+*/
+exports.getProfileActivities = async function (req, res) {
+  try {
+    let amount = parseInt(req.params.amount);
+    let userId = req.params.userId;
+
+    if (
+      isNaN(amount) ||
+      !objectUtils.isObjectValidStringId(userId) ||
+      amount <= 0
+    )
+      return res.status(400).json("Bad Request");
+    if (!userUtils.doesUserIdExist(userId))
+      return res.status(404).json("Not Found");
+
+    let user = await userUtils.getUserFromId(userId);
+    let userParams = await userUtils.getUserParamsFromUserId(userId);
+
+    if (!user || !userParams) return res.status(404).json("Not Found");
+
+    let payload =
+      "headers" in req && req.headers
+        ? "authorization" in req.headers && req.headers.authorization
+          ? authUtils.authentifySessionToken(
+              req.headers.authorization.replace("Bearer ", "")
+            )
+          : null
+        : null;
+
+    let public = userParams.profilPublic;
+
+    if (!public) {
+      if (
+        !"headers" in req ||
+        !req.headers ||
+        !"authorization" in req.headers ||
+        !req.headers.authorization ||
+        !payload
+      )
+        return res.status(401).json("Unauthorized");
+
+      if (
+        payload &&
+        payload.userId != user._id.toString() &&
+        !(await userUtils.isUserIdAdmin(payload.userId)) &&
+        !(await followUtils.userIdFollows(payload.userId, user._id.toString()))
+      )
+        return res.status(403).json("Forbidden");
+    }
+
+    let activities = await avisUtils.getAvisFromUserId(userId, amount);
+
+    return res.status(200).json(activities);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("Internal Server Error");
+  }
+};
+
+//GET /api/profiles/posts/activities/:userId&:amount&:timestamp
+/*
+  Récupères une liste d'avis d'un utilisateur.
+  Si le profil est privé, un token authentique doit être reçu qui appartient soit à ce même profil, soit à un administrateur, soit à une personne qui suit le profil.
+  Si toutes ces conditions ne sont pas satisfaites, renvoi du code 403 Forbidden.
+*/
+exports.getProfileActivitiesWithTimestamp = async function (req, res) {
+  try {
+    let amount = parseInt(req.params.amount);
+    let userId = req.params.userId;
+    let timestamp = req.params.timestamp;
+
+    if (
+      isNaN(amount) ||
+      !objectUtils.isObjectValidStringId(userId) ||
+      amount <= 0 ||
+      !objectUtils.isStringTimestamp(timestamp)
+    )
+      return res.status(400).json("Bad Request");
+    if (!userUtils.doesUserIdExist(userId))
+      return res.status(404).json("Not Found");
+
+    let user = await userUtils.getUserFromId(userId);
+    let userParams = await userUtils.getUserParamsFromUserId(userId);
+
+    if (!user || !userParams) return res.status(404).json("Not Found");
+
+    let payload =
+      "headers" in req && req.headers
+        ? "authorization" in req.headers && req.headers.authorization
+          ? authUtils.authentifySessionToken(
+              req.headers.authorization.replace("Bearer ", "")
+            )
+          : null
+        : null;
+
+    let public = userParams.profilPublic;
+
+    if (!public) {
+      if (
+        !"headers" in req ||
+        !req.headers ||
+        !"authorization" in req.headers ||
+        !req.headers.authorization ||
+        !payload
+      )
+        return res.status(401).json("Unauthorized");
+
+      if (
+        payload &&
+        payload.userId != user._id.toString() &&
+        !(await userUtils.isUserIdAdmin(payload.userId)) &&
+        !(await followUtils.userIdFollows(payload.userId, user._id.toString()))
+      )
+        return res.status(403).json("Forbidden");
+    }
+
+    let activities = await avisUtils.getAvisFromUserId(
+      userId,
+      amount,
+      timestamp
+    );
+
+    return res.status(200).json(activities);
   } catch (err) {
     console.log(err);
     return res.status(500).json("Internal Server Error");

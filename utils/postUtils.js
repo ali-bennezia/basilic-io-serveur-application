@@ -79,8 +79,11 @@ exports.getPostsFromUser = async function (
   timestamp = null,
   customFilter = {}
 ) {
-  if (!(userId instanceof String || typeof userId == "string"))
-    throw "Argument invalide.";
+  if (
+    !(userId instanceof String || typeof userId == "string") ||
+    parseInt(amount) <= 0
+  )
+    throw "Arguments invalides.";
 
   if (timestamp == null)
     return await postModel
@@ -109,4 +112,8 @@ exports.getPostsFromUser = async function (
 exports.doesPostWithIdExist = async (postId) => {
   if (!objectUtils.isObjectString(postId)) throw "Argument invalide.";
   return await postModel.exists({ _id: postId });
+};
+
+exports.getPostFromId = async (postId) => {
+  return await postModel.findById(postId);
 };

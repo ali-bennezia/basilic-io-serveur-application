@@ -16,4 +16,16 @@ router.get(
 // GET /api/profiles/posts/:userId&:nature&:amount
 router.get("/posts/:userId&:nature&:amount", profilController.getProfilePosts);
 
+// GET /api/profiles/posts/activities/:userId&:amount&:timestamp
+router.get(
+  "/posts/activities/:userId&:amount&:timestamp",
+  profilController.getProfileActivitiesWithTimestamp
+);
+
+// GET /api/profiles/posts/activities/:userId&:amount
+router.get(
+  "/posts/activities/:userId&:amount",
+  profilController.getProfileActivities
+);
+
 module.exports = router;

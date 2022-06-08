@@ -90,13 +90,15 @@ const avisUtils = require("./utils/avisUtils");
   "like"
 );*/
 
-/*let test = async () => {
-  console.log(await avisUtils.getPostAvis("629ee993601725664882b9bf"));
+let test = async () => {
+  console.log(
+    await avisUtils.getAvisFromUserId("629ed8fc7c48afad0c583543", 10)
+  );
 };
 
-avisUtils.removeAvisWithUserIdAndPostId(
+/*avisUtils.removeAvisWithUserIdAndPostId(
   "629ed8fc7c48afad0c583543",
   "629ee993601725664882b9bf"
-);
+);*/
 
-test();*/
+test();

@@ -89,3 +89,42 @@ exports.getPostAvis = async (postId) => {
     return null;
   }
 };
+
+exports.getAvisFromUserId = async function (
+  userId,
+  amount = 10,
+  timestamp = null
+) {
+  if (
+    !objectUtils.isObjectValidStringId(userId) ||
+    parseInt(amount) <= 0 ||
+    (timestamp && !objectUtils.isStringTimestamp(timestamp))
+  )
+    throw "Arguments invalides.";
+  if (!userUtils.doesUserIdExist(userId))
+    throw "L'identifiant du post ciblé n'appartient à aucun post connu.";
+  let filter = { auteur: userId };
+  if (timestamp) filter.createdAt = { $lte: timestamp };
+  let avis = await avisModel
+    .find(filter)
+    .sort({ createdAt: -1 })
+    .limit(
+      Math.min(
+        parseInt(process.env.ACTIVITIES_MAX_LOAD_AMOUNT_PER_REQUEST ?? 20),
+        parseInt(amount)
+      )
+    )
+    .exec();
+  let result = [];
+  for (let el of avis) {
+    result.push({
+      ...el._doc,
+      auteur: objectUtils.getUserSummaryProfileData(
+        await userUtils.getUserFromId(el.auteur.toString()),
+        await userUtils.getUserParamsFromUserId(el.auteur.toString())
+      ),
+      postCible: await postUtils.getPostFromId(el.postCible.toString()),
+    });
+  }
+  return result;
+};
