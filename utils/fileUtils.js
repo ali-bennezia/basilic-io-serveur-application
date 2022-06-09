@@ -64,3 +64,10 @@ exports.readPublicFile = (path) =>
   this.readFile(path.replace("..", "").replace("/", ""), "public/");
 exports.readPrivateFile = (path) =>
   this.readFile(path.replace("..", "").replace("/", ""), "private/");
+
+exports.validateFile = (sizeInBytes, mimeType) => {
+  let validMIMEtypes = process.env.ACCEPTED_MEDIA_MIMETYPES.split(" ");
+  let maxSizeInBytes = parseInt(process.env.MAX_MEDIA_SIZE_BYTES);
+
+  return sizeInBytes <= maxSizeInBytes && validMIMEtypes.includes(mimeType);
+};

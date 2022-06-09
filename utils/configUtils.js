@@ -9,6 +9,8 @@ const compulsoryEnvVariables = [
   "TWILIO_AUTH_TOKEN",
   "TWILIO_PHONE_NUMBER",
   "MEDIA_SERVER_ADRESS",
+  "ACCEPTED_MEDIA_MIMETYPES",
+  "MAX_MEDIA_SIZE_BYTES",
 ];
 
 exports.checkEnvVariables = () => {

@@ -7,6 +7,7 @@ const path = require("path");
 //Utilitaires.
 
 const userUtils = require("./../utils/userUtils");
+const objectUtils = require("./../utils/objectUtils");
 
 //Modèles.
 
@@ -41,9 +42,9 @@ exports.checkUserMediaAccessByUserId = async function (mediaLink, userId) {
 exports.createMedia = async function (
   mediaLink,
   mediaBuffer,
+  userId,
   isPublic = true,
-  accessRightsList = [],
-  userId
+  accessRightsList = []
 ) {
   if (!mediaLink || !mediaBuffer || !userId) throw "Arguments manquants.";
   if (
@@ -88,8 +89,9 @@ exports.createMedia = async function (
         await mediaModel.findOneAndDelete({ _id: media._id });
         dbCreated = false;
       }
-      return false;
+      return null;
     }
+    return media;
   } catch (err) {
     if (dbCreated && media) {
       await mediaModel.findOneAndDelete({ _id: media._id });
@@ -106,9 +108,8 @@ exports.createMedia = async function (
     }
 
     console.log(err);
-    return false;
   }
-  return true;
+  return null;
 };
 
 exports.removeMediaByLink = async (mediaLink) => {
@@ -163,4 +164,22 @@ exports.removeMediasByIds = async function (...mediaIds) {
     return false;
   }
   return true;
+};
+
+exports.getMediaLinkArrayFromMediaIdArray = async function (mediaIds) {
+  if (!Array.isArray(mediaIds)) throw "Argument invalide.";
+  console.log(mediaIds);
+  let result = [];
+  for (let el of mediaIds) {
+    if (
+      !objectUtils.isObjectValidStringId(el.toString()) ||
+      !(await mediaModel.exists({ _id: el }))
+    )
+      continue;
+
+    let media = await mediaModel.findById(el);
+    if (media && "lien" in media && media.lien) result.push(media.lien);
+  }
+  console.log(result);
+  return result;
 };

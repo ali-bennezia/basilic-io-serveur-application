@@ -21,11 +21,13 @@ exports.createPost = async function (
   mediaIds = null
 ) {
   if (
-    !(postContent instanceof String || typeof postContent == "string") ||
-    !(authorUserId instanceof String || typeof authorUserId == "string") ||
+    !objectUtils.isObjectString(postContent) ||
+    !objectUtils.isObjectValidStringId(authorUserId) ||
     (targetPostId != null &&
-      !(authorUserId instanceof String || typeof authorUserId == "string")) ||
+      !objectUtils.isObjectValidStringId(targetPostId)) ||
     (mediaIds != null && !Array.isArray(mediaIds)) ||
+    (targetPostId != null &&
+      !(await postModel.exists({ _id: targetPostId }))) ||
     !(await userModel.model.exists({ _id: authorUserId }))
   )
     throw "Argument(s) invalide(s).";
@@ -123,13 +125,47 @@ exports.getPostFromId = async (postId) => {
   - Le nombre de likes
   - Le nombre de dislikes
   - Le nombre de réponses
+  - Les informations sommaires du profil de l'auteur
 */
 exports.getPostSecondaryData = async (postId) => {
   if (!objectUtils.isObjectValidStringId(postId)) throw "Argument invalide.";
   if (!(await postModel.exists({ _id: postId })))
     throw "Le post ciblé par l'identifiant donné n'existe pas.";
+  let posterProfile = await userUtils.getUserAndUserParamsFromUserId(
+    (await this.getPostFromId(postId.toString())).auteur.toString()
+  );
   return {
     ...(await avisUtils.getPostAvis(postId)),
+    auteur: await objectUtils.getUserSummaryProfileData(
+      posterProfile.user,
+      posterProfile.params
+    ),
     reponse: await postModel.count({ postCible: postId }),
   };
+};
+
+/*
+  Récupère l'utilisateur (et ses paramètres) du profil sur lequel le post se trouve.
+  La règle qui régis la méthode est la suivante:
+  - Si un post ne répond à aucun autre post, alors il se trouve sur le profil de son auteur.
+  - Si un post répond à un autre post, alors il se trouve sur le profil de l'auteur du post hierarchiquement le plus en haut 
+    (c'est à dire celui qui n'est lui même la réponse à aucun post) sur la file de réponses.
+*/
+exports.getPostProfileDomain = async (postId) => {
+  if (!objectUtils.isObjectValidStringId(postId)) throw "Argument invalide.";
+  if (!(await postModel.exists({ _id: postId })))
+    throw "Le post ciblé par l'identifiant donné n'existe pas.";
+  let post = await this.getPostFromId(postId);
+
+  let indexPost = post;
+  while (
+    "postCible" in indexPost &&
+    indexPost.postCible &&
+    (await postModel.exists({ _id: indexPost.postCible }))
+  )
+    indexPost = await this.getPostFromId(indexPost.postCible.toString());
+
+  let auteurDomaine = indexPost.auteur.toString();
+
+  return await userUtils.getUserAndUserParamsFromUserId(auteurDomaine);
 };

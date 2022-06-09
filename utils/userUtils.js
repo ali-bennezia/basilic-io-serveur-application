@@ -37,16 +37,29 @@ exports.addUser = async (user) => {
 };
 
 exports.getUserFromId = async (id) => {
+  if (!objectUtils.isObjectValidStringId(id))
+    throw "L'identifiant envoyé est incorrect.";
+  if (!(await userModel.model.exists({ _id: id })))
+    throw "L'utilisateur n'existe pas.";
   let user = await userModel.model.findOne({ _id: id });
-  if (!user) throw "L'utilisateur n'existe pas.";
+
   return user;
 };
 
 exports.getUserParamsFromUserId = async (id) => {
+  if (!objectUtils.isObjectValidStringId(id))
+    throw "L'identifiant envoyé est incorrect.";
+  if (!(await userParamsModel.exists({ utilisateur: id })))
+    throw "Les paramètres n'existent pas.";
   let params = await userParamsModel.findOne({ utilisateur: id });
-  if (!params)
-    throw "Les paramètres liés à l'identifiant d'utilisateur donné en argument n'existent pas.";
   return params;
+};
+
+exports.getUserAndUserParamsFromUserId = async (id) => {
+  return {
+    user: await this.getUserFromId(id),
+    params: await this.getUserParamsFromUserId(id),
+  };
 };
 
 exports.isUserIdAdmin = async (id) => {
@@ -73,7 +86,7 @@ exports.deleteUserFromId = async (id) => {
   )
     throw "L'identifiant envoyé est incorrect.";
 
-  //Suppression de tous les posts.
+  //Suppression de tous les posts en asynchrone.
   postUtils.removePostsFromUserId(id);
 
   //Suppresion des paramètres.

@@ -85,8 +85,8 @@ exports.getProfilePosts = async function (req, res) {
         return res.status(401).json("Unauthorized");
       if (
         !(await userUtils.isUserIdAdmin(payload.userId)) &&
-        payload.userId != user._id &&
-        !(await followUtils.userIdFollows(payload.userId, user._id))
+        payload.userId != user._id.toString() &&
+        !(await followUtils.userIdFollows(payload.userId, user._id.toString()))
       )
         return res.status(403).json("Forbidden");
     }

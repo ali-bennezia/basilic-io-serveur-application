@@ -118,6 +118,7 @@ exports.getAvisFromUserId = async function (
     .exec();
   let result = [];
   for (let el of avis) {
+    let postData = await postUtils.getPostFromId(el.postCible.toString());
     result.push({
       ...el._doc,
       auteur: objectUtils.getUserSummaryProfileData(
@@ -125,8 +126,11 @@ exports.getAvisFromUserId = async function (
         await userUtils.getUserParamsFromUserId(el.auteur.toString())
       ),
       postCible: {
-        ...(await postUtils.getPostFromId(el.postCible.toString())),
+        ...postData,
         ...(await postUtils.getPostSecondaryData(el.postCible.toString())),
+        medias: await mediaUtils.getMediaLinkArrayFromMediaIdArray(
+          postData.medias
+        ),
       },
     });
   }

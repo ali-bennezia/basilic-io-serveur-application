@@ -141,7 +141,10 @@ exports.trimMediaAuthorizationObject = function (object) {
 
 //Vérifier si l'objet object est bien une chaine de charactères.
 exports.isObjectString = (object) =>
-  object && (typeof object == "string" || object instanceof String);
+  object != null &&
+  object != undefined &&
+  object != false &&
+  (typeof object == "string" || object instanceof String);
 
 //Vérifier si l'objet object est bien une chaine de charactère contenant un identifiant.
 exports.isObjectValidStringId = (object) =>
