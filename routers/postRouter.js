@@ -42,6 +42,13 @@ router.delete(
   postController.deletePost
 );
 
+// GET /api/posts/responses/:postId&:amount&:timestamp
+router.get(
+  "/responses/:postId&:amount&:timestamp",
+  authMiddlewares.checkTokenAuthenticity,
+  postController.getPostResponsesWithTimestamp
+);
+
 // GET /api/posts/responses/:postId&:amount
 router.get(
   "/responses/:postId&:amount",
