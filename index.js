@@ -56,17 +56,17 @@ mongoose
 const mediaUtils = require("./utils/mediaUtils");
 const postUtils = require("./utils/postUtils");
 
-//postUtils.createPost("629ed8fc7c48afad0c583543", "Hey");
-let main = async () => {
+//postUtils.createPost("629ed8fc7c48afad0c583543", "Bjr");
+/*let main = async () => {
   console.log(
     await postUtils.getPostsFromUser(
-      "6298e6f62f41d6b04381c47a",
+      "629ed8fc7c48afad0c583543",
       10,
-      "2021-06-06T04:35:47.048Z"
+      "2022-10-16T04:35:47.048Z"
     )
   );
 };
-//main();
+main();*/
 //postUtils.removePost("629d6a19b565ee740e265ab7");
 
 //mediaUtils.removeMediasByIds()
@@ -95,10 +95,11 @@ const avisUtils = require("./utils/avisUtils");
 );*/
 
 let test = async () => {
-  console.log(
+  console
+    .log
     //await avisUtils.getAvisFromUserId("629ed8fc7c48afad0c583543", 10)
-    await postUtils.getPostProfileDomain("629ee9bc5c05723c824975cc")
-  );
+    //await postUtils.getPostProfileDomain("629ee9bc5c05723c824975cc")
+    ();
 };
 
 /*avisUtils.removeAvisWithUserIdAndPostId(

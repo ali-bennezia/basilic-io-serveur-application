@@ -7,6 +7,7 @@ const mimetypes = require("mime-types");
 const postUtils = require("./../utils/postUtils");
 const objectUtils = require("./../utils/objectUtils");
 const mediaUtils = require("./../utils/mediaUtils");
+const userUtils = require("./../utils/userUtils");
 const fileUtils = require("./../utils/fileUtils");
 const followUtils = require("./../utils/followUtils");
 const { default: mongoose } = require("mongoose");
@@ -15,6 +16,9 @@ const { v1: uuidv1, v4: uuidv4 } = require("uuid");
 //API
 
 // GET /api/posts/get/:postId
+/*
+  Permet l'obtention d'un post. Refus si le profil du domaine auquel le post appartient est privé et que l'utilisateur n'y a pas accès.
+*/
 exports.getPost = async function (req, res) {
   try {
     if (
@@ -123,10 +127,6 @@ exports.createPost = async function (req, res) {
       );
       if (newMedia != null) resultMedias.push(newMedia);
     }
-    console.log(tokenPayload.userId);
-    console.log(req.body.contenu);
-    console.log(targetPostId);
-    console.log(resultMedias);
 
     let post = await postUtils.createPost(
       tokenPayload.userId,
@@ -147,3 +147,134 @@ exports.createPost = async function (req, res) {
     return res.status(500).json("Internal Server Error");
   }
 };
+
+//PATCH /api/posts/update/:postId
+/*
+  Met à jour un post. C'est à dire, son contenu ou ses médias.
+  Un token authentique appartenant à un compte valide doit être envoyé par le client.
+*/
+exports.editPost = async function (req, res) {
+  try {
+    if (
+      !"postId" in req.params ||
+      !req.params.postId ||
+      !objectUtils.isObjectValidStringId(req.params.postId) ||
+      !objectUtils.containsOnlyGivenArrayElementsAsProperties(req.body, [
+        "contenu",
+      ]) ||
+      !"contenu" in req.body ||
+      !objectUtils.isObjectString(req.body.contenu)
+    )
+      return res.status(400).json("Bad Request");
+
+    if (!(await postUtils.doesPostWithIdExist(req.params.postId)))
+      return res.status(404).json("Not Found");
+
+    let post = await postUtils.getPostFromId(req.params.postId);
+    let userId = req.tokenPayload.userId;
+
+    if (post.auteur.toString() != userId)
+      return res.status(403).json("Forbidden");
+
+    let newPost = await postUtils.updatePost(
+      req.params.postId,
+      req.body.contenu
+    );
+    return res.status(200).json({
+      ...newPost._doc,
+      ...(await postUtils.getPostSecondaryData(req.params.postId)),
+      medias: await mediaUtils.getMediaLinkArrayFromMediaIdArray(
+        newPost.medias
+      ),
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("Internal Server Error");
+  }
+};
+
+//DELETE /api/posts/delete/:postId
+/*
+  Supprime un post. Seul l'auteur ou un administrateur doit pouvoir le faire.
+*/
+exports.deletePost = async function (req, res) {
+  try {
+    if (
+      !"postId" in req.params ||
+      !req.params.postId ||
+      !objectUtils.isObjectValidStringId(req.params.postId)
+    )
+      return res.status(400).json("Bad Request");
+
+    if (!(await postUtils.doesPostWithIdExist(req.params.postId)))
+      return res.status(404).json("Not Found");
+
+    let post = await postUtils.getPostFromId(req.params.postId);
+    let userId = req.tokenPayload.userId;
+
+    if (
+      post.auteur.toString() != userId &&
+      !(await userUtils.isUserIdAdmin(userId))
+    )
+      return res.status(403).json("Forbidden");
+
+    postUtils.removePost(req.params.postId);
+    return res.status(204).json("No Content");
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("Internal Server Error");
+  }
+};
+
+//GET /api/posts/responses/:postId&:amount
+exports.getPostResponses = async function (req, res) {
+  try {
+    //Sanitation des informations reçues.
+    let amnt = parseInt(req.params.amount);
+    if (
+      !objectUtils.isObjectValidStringId(req.params.postId) ||
+      isNaN(amnt) ||
+      amnt <= 0 ||
+      amnt >
+        parseInt(process.env.POST_RESPONSES_MAX_LOAD_AMOUNT_PER_REQUEST ?? 10)
+    )
+      return res.status(400).json("Bad Request");
+
+    //Vérification de la validité des informations reçues.
+    if (!(await postUtils.doesPostWithIdExist(req.params.postId)))
+      return res.status(404).json("Not Found");
+
+    //Vérification des droits d'accès.
+    let post = await postUtils.getPostFromId(req.params.postId);
+    let domain = await postUtils.getPostProfileDomain(req.params.postId);
+    let tokenPayload = req.tokenPayload;
+
+    if (
+      !userUtils.doesUserIdHaveAccessToUserIdDomain(
+        tokenPayload.userId,
+        domain.user._id.toString()
+      )
+    )
+      return res.status(403).json("Forbidden");
+
+    //Execution.
+
+    let resps = await postUtils.getPostResponses(req.params.postId, amnt);
+    let results = [];
+
+    for (let el of resps) {
+      results.push({
+        ...el._doc,
+        ...(await postUtils.getPostSecondaryData(el._id.toString())),
+        medias: await mediaUtils.getMediaLinkArrayFromMediaIdArray(el.medias),
+      });
+    }
+
+    return res.status(200).json(results);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("Internal Server Error");
+  }
+};
+
+//GET /api/posts/responses/:postId&:amount&:timestamp

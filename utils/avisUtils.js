@@ -121,7 +121,7 @@ exports.getAvisFromUserId = async function (
     let postData = await postUtils.getPostFromId(el.postCible.toString());
     result.push({
       ...el._doc,
-      auteur: objectUtils.getUserSummaryProfileData(
+      auteur: await objectUtils.getUserSummaryProfileData(
         await userUtils.getUserFromId(el.auteur.toString()),
         await userUtils.getUserParamsFromUserId(el.auteur.toString())
       ),

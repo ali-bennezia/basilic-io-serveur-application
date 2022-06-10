@@ -28,4 +28,25 @@ router.post(
   postController.createPost
 );
 
+// PATCH /api/posts/update/:postId
+router.patch(
+  "/update/:postId",
+  authMiddlewares.checkTokenAccountValidity,
+  postController.editPost
+);
+
+// DELETE /api/posts/delete/:postId
+router.delete(
+  "/delete/:postId",
+  authMiddlewares.checkTokenAccountValidity,
+  postController.deletePost
+);
+
+// GET /api/posts/responses/:postId&:amount
+router.get(
+  "/responses/:postId&:amount",
+  authMiddlewares.checkTokenAuthenticity,
+  postController.getPostResponses
+);
+
 module.exports = router;

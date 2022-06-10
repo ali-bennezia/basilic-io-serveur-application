@@ -35,7 +35,10 @@ exports.getProfile = async function (req, res) {
     if (!"id" in req.params || !req.params.id || !user || !userParams)
       return res.status(400).json("Bad Request");
 
-    let profileData = objectUtils.getUserSummaryProfileData(user, userParams);
+    let profileData = await objectUtils.getUserSummaryProfileData(
+      user,
+      userParams
+    );
 
     return res.status(200).json(profileData);
   } catch (err) {
@@ -57,11 +60,12 @@ exports.getProfile = async function (req, res) {
 */
 exports.getProfilePosts = async function (req, res) {
   try {
+    let amnt = parseInt(req.params.amount);
     if (
       !["0", "1", "2"].includes(req.params.nature) ||
-      isNaN(req.params.amount) ||
-      parseInt(req.params.amount) >
-        parseInt(process.env.POSTS_MAX_LOAD_AMOUNT_PER_REQUEST ?? 20)
+      isNaN(amnt) ||
+      amnt > parseInt(process.env.POSTS_MAX_LOAD_AMOUNT_PER_REQUEST ?? 20) ||
+      amnt <= 0
     )
       return res.status(400).json("Bad Request");
 
@@ -147,11 +151,12 @@ exports.getProfilePosts = async function (req, res) {
 */
 exports.getProfilePostsWithTimestamp = async function (req, res) {
   try {
+    let amnt = parseInt(req.params.amount);
     if (
       !["0", "1", "2"].includes(req.params.nature) ||
-      isNaN(parseInt(req.params.amount)) ||
-      parseInt(req.params.amount) >
-        parseInt(process.env.POSTS_MAX_LOAD_AMOUNT_PER_REQUEST ?? 20) ||
+      isNaN(amnt) ||
+      amnt > parseInt(process.env.POSTS_MAX_LOAD_AMOUNT_PER_REQUEST ?? 20) ||
+      amnt <= 0 ||
       !objectUtils.isStringTimestamp(req.params.timestamp)
     )
       return res.status(400).json("Bad Request");

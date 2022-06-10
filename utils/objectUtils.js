@@ -6,6 +6,10 @@
 
 const mongoose = require("mongoose");
 
+//Utilitaires
+
+const mediaUtils = require("./../utils/mediaUtils");
+
 //Implémentations
 
 exports.arrayEqualsArray = (array1, array2) =>
@@ -155,18 +159,21 @@ exports.isStringTimestamp = (object) =>
   this.isObjectString(object) && new Date(object).getTime() > 0;
 
 //Extraire les informations sommaire de profil d'un utilisateur à partir de son document et celui de ses paramètres.
-exports.getUserSummaryProfileData = (user, userParams) => {
+exports.getUserSummaryProfileData = async (user, userParams) => {
   let profileData = { id: user._id, nomUtilisateur: user.nomUtilisateur };
   if ("nomPublic" in userParams && userParams.nomPublic)
     profileData.nomPublic = userParams.nomPublic;
   if ("profilPublic" in userParams && userParams.profilPublic)
     profileData.profilPublic = userParams.profilPublic;
   if ("photoProfil" in userParams && userParams.photoProfil)
-    profileData.photoProfil = userParams.photoProfil;
+    profileData.photoProfil = await mediaUtils.getMediaLinkFromId(
+      userParams.photoProfil
+    );
   if ("banniereProfil" in userParams && userParams.banniereProfil)
-    profileData.banniereProfil = userParams.banniereProfil;
+    profileData.banniereProfil = await mediaUtils.getMediaLinkFromId(
+      userParams.banniereProfil
+    );
   if ("descriptionProfil" in userParams && userParams.descriptionProfil)
     profileData.descriptionProfil = userParams.descriptionProfil;
-
   return profileData;
 };

@@ -169,3 +169,46 @@ exports.getPostProfileDomain = async (postId) => {
 
   return await userUtils.getUserAndUserParamsFromUserId(auteurDomaine);
 };
+
+exports.updatePost = async (postId, contenu) => {
+  if (!objectUtils.isObjectValidStringId(postId)) throw "Argument invalide.";
+  if (!(await postModel.exists({ _id: postId })))
+    throw "Le post ciblé par l'identifiant donné n'existe pas.";
+  let post = await postModel.findByIdAndUpdate(
+    postId,
+    { contenu: contenu },
+    { new: true }
+  );
+  console.log(post);
+  return post;
+};
+
+/*
+  Récupères une liste de réponses à un post.
+    - postId: l'identifiant du post conçerné
+    - amount: le nombre de réponses maximal à récuperer
+    - timestamp: un instant précis. toute réponse datante de cet instant ou avant seront récupérées
+*/
+exports.getPostResponses = async (postId, amount = 1, timestamp = null) => {
+  //Sanitation des variables.
+  amount = parseInt(amount);
+  if (
+    !objectUtils.isObjectValidStringId(postId) ||
+    isNaN(amount) ||
+    amount <= 0 ||
+    (timestamp != null && !objectUtils.isStringTimestamp(timestamp))
+  )
+    throw "Arguments invalides.";
+
+  let optionalTimestampFilter = timestamp
+    ? { createdAt: { $lte: timestamp } }
+    : {};
+
+  let result = await postModel
+    .find({ postCible: postId, ...optionalTimestampFilter })
+    .sort({ createdAt: -1 })
+    .limit(amount)
+    .exec();
+
+  return result;
+};

@@ -13,7 +13,7 @@ const objectUtils = require("./../utils/objectUtils");
 
 const userModel = require("./../models/utilisateurModel");
 const mediaModel = require("./../models/mediaModel");
-const { generateUserIdSession } = require("./authUtils");
+const authUtils = require("./authUtils");
 
 //Implémentations.
 
@@ -23,6 +23,12 @@ exports.getMediaByLink = async function (mediaLink) {
 
   let media = await mediaModel.findOne({ lien: mediaLink });
   return media;
+};
+
+exports.getMediaLinkFromId = async (mediaId) => {
+  if (!objectUtils.isObjectValidStringId(mediaId)) throw "Argument invalide.";
+  let media = await mediaModel.findById(mediaId);
+  return media ? ("lien" in media ? media.lien : "") : "";
 };
 
 exports.getMedia = async function (id) {

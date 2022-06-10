@@ -6,6 +6,7 @@
 
 const objectUtils = require("./objectUtils");
 const postUtils = require("./postUtils");
+const followUtils = require("./followUtils");
 
 //Modèles.
 
@@ -104,4 +105,29 @@ exports.deleteUser = async (user) => {
   if (!"_id" in user) throw "L'objet envoyé ne contient pas d'identifiant.";
 
   await this.deleteUserFromId(user._id.toString());
+};
+
+exports.doesUserIdHaveAccessToUserIdDomain = async (userId, domainUserId) => {
+  if (
+    !objectUtils.isObjectValidStringId(userId) ||
+    !objectUtils.isObjectValidStringId(domainUserId)
+  )
+    throw "Arguments invalides.";
+
+  let userIsAdmin = await this.isUserIdAdmin(userId);
+  let domainUser = await this.getUserParamsFromUserId(domainUserId);
+
+  let publicDomain =
+    "profilPublic" in domainUser ? domainUser.profilPublic : true;
+
+  if (!publicDomain) {
+    if (
+      !userIsAdmin &&
+      !(await followUtils.userIdFollows(userId, domainUserId)) &&
+      userId != domainUserId
+    )
+      return false;
+  }
+
+  return true;
 };
