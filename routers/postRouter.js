@@ -56,4 +56,18 @@ router.get(
   postController.getPostResponses
 );
 
+// POST /api/posts/activities/create/:postId&:nature
+router.post(
+  "/activities/create/:postId&:nature",
+  authMiddlewares.checkTokenAccountValidity,
+  postController.postActivity
+);
+
+// DELETE /api/posts/activities/delete/:postId
+router.delete(
+  "/activities/delete/:postId",
+  authMiddlewares.checkTokenAccountValidity,
+  postController.deleteActivity
+);
+
 module.exports = router;

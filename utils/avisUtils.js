@@ -48,6 +48,29 @@ exports.removeAvisWithUserIdAndPostId = async (authorUserId, targetPostId) => {
   });
 };
 
+exports.getSingleAvisFromAuthorUserIdAndTargetPostId = async (
+  authorUserId,
+  targetPostId
+) => {
+  if (
+    !(
+      objectUtils.isObjectValidStringId(authorUserId) &&
+      objectUtils.isObjectValidStringId(targetPostId)
+    )
+  )
+    throw "Arguments invalides.";
+
+  if (!userUtils.doesUserIdExist(authorUserId))
+    throw "L'identifiant de l'auteur n'appartient à aucun utilisateur connu.";
+  if (!postUtils.doesPostWithIdExist(targetPostId))
+    throw "L'identifiant du post ciblé n'appartient à aucun post connu.";
+
+  return await avisModel.findOne({
+    auteur: authorUserId,
+    postCible: targetPostId,
+  });
+};
+
 exports.createAvis = async (authorUserId, targetPostId, nature) => {
   if (
     !(
@@ -63,15 +86,37 @@ exports.createAvis = async (authorUserId, targetPostId, nature) => {
   if (!postUtils.doesPostWithIdExist(targetPostId))
     throw "L'identifiant du post ciblé n'appartient à aucun post connu.";
 
-  if (await this.doesAvisExistWithUserIdAndPostId(authorUserId, targetPostId))
-    await this.removeAvisWithUserIdAndPostId(authorUserId, targetPostId);
+  let doesAlreadyExist = await this.doesAvisExistWithUserIdAndPostId(
+    authorUserId,
+    targetPostId
+  );
 
-  return await avisModel.create({
-    auteur: authorUserId,
-    postCible: targetPostId,
-    nature: nature,
-  });
+  if (doesAlreadyExist) {
+    let avis = await this.getSingleAvisFromAuthorUserIdAndTargetPostId(
+      authorUserId,
+      targetPostId
+    );
+    if (avis != null && "nature" in avis && avis.nature != nature) {
+      avis.nature = nature;
+      await avis.save();
+    }
+    return avis;
+  } else {
+    return await avisModel.create({
+      auteur: authorUserId,
+      postCible: targetPostId,
+      nature: nature,
+    });
+  }
+
+  //if (doesAlreadyExist)
+  //await this.removeAvisWithUserIdAndPostId(authorUserId, targetPostId);
 };
+
+//Envoie toutes les valeurs possibles de la propriété nature du modèle Avis.
+exports.getAdmissibleNatureValues = () => [
+  ...avisModel.schema.paths.nature.enumValues,
+];
 
 //Envoie le nombre de likes/dislikes d'un post.
 exports.getPostAvis = async (postId) => {

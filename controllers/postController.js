@@ -5,6 +5,7 @@ const mimetypes = require("mime-types");
 // Utilitaires
 
 const postUtils = require("./../utils/postUtils");
+const avisUtils = require("./../utils/avisUtils");
 const objectUtils = require("./../utils/objectUtils");
 const mediaUtils = require("./../utils/mediaUtils");
 const userUtils = require("./../utils/userUtils");
@@ -329,6 +330,99 @@ exports.getPostResponsesWithTimestamp = async function (req, res) {
     }
 
     return res.status(200).json(results);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("Internal Server Error");
+  }
+};
+
+// POST /api/posts/activities/create/:postId&:nature
+/*
+  Crée une nouvelle activité.
+  Un token authentique et valide doit être envoyé par le client.
+  :postId est l'identifiant du post ciblé.
+  :nature doit correspondre aux valeurs admissibles de la propriété correspondante sur la table.
+*/
+exports.postActivity = async function (req, res) {
+  try {
+    //Sanitation des valeurs reçues.
+    if (
+      !req.params.postId ||
+      !objectUtils.isObjectValidStringId(req.params.postId) ||
+      !req.params.nature ||
+      !avisUtils.getAdmissibleNatureValues().includes(req.params.nature)
+    )
+      return res.status(400).json("Bad Request");
+
+    //Récupérations des informations sur le client.
+    let tokenPayload = req.tokenPayload;
+    let clientUserId = tokenPayload.userId;
+
+    //Validation des valeurs reçues.
+    if (
+      !(await postUtils.doesPostWithIdExist(req.params.postId)) ||
+      !(await userUtils.doesUserIdExist(clientUserId))
+    )
+      return res.status(404).json("Not Found");
+
+    //Validation des droits d'accès.
+    let postAuthorUserId = (
+      await postUtils.getPostFromId(req.params.postId)
+    ).auteur.toString();
+    if (
+      !(await userUtils.doesUserIdHaveAccessToUserIdDomain(
+        clientUserId,
+        postAuthorUserId
+      ))
+    )
+      return res.status(403).json("Forbidden");
+
+    //Execution.
+    avisUtils.createAvis(clientUserId, req.params.postId, req.params.nature);
+    return res.status(201).json("Created");
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("Internal Server Error");
+  }
+};
+
+// DELETE /api/posts/activities/delete/:postId
+exports.deleteActivity = async function (req, res) {
+  try {
+    //Sanitation des valeurs reçues.
+    if (
+      !req.params.postId ||
+      !objectUtils.isObjectValidStringId(req.params.postId)
+    )
+      return res.status(400).json("Bad Request");
+
+    //Récupérations des informations sur le client.
+    let tokenPayload = req.tokenPayload;
+    let clientUserId = tokenPayload.userId;
+
+    //Validation des valeurs reçues.
+    if (
+      !(await postUtils.doesPostWithIdExist(req.params.postId)) ||
+      !(await userUtils.doesUserIdExist(clientUserId))
+    )
+      return res.status(404).json("Not Found");
+
+    //Validation des droits d'accès.
+    let postAuthorUserId = (
+      await postUtils.getPostFromId(req.params.postId)
+    ).auteur.toString();
+    if (
+      !(await userUtils.doesUserIdHaveAccessToUserIdDomain(
+        clientUserId,
+        postAuthorUserId
+      ))
+    )
+      return res.status(403).json("Forbidden");
+
+    //Execution.
+    //avisUtils.createAvis(clientUserId, req.params.postId, req.params.nature);
+    avisUtils.removeAvisWithUserIdAndPostId(clientUserId, req.params.postId);
+    return res.status(204).json("No Content");
   } catch (err) {
     console.log(err);
     return res.status(500).json("Internal Server Error");
