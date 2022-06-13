@@ -30,6 +30,7 @@ app.use("/api/posts", require("./routers/postRouter"));
 app.use("/api/profiles", require("./routers/profilRouter"));
 app.use("/api/users/params", require("./routers/utilisateurParamsRouter"));
 app.use("/api/users", require("./routers/utilisateurRouter"));
+app.use("/api/messages", require("./routers/messageRouter"));
 
 //Execution.
 
@@ -55,6 +56,18 @@ mongoose
 //Création d'un média de test:
 const mediaUtils = require("./utils/mediaUtils");
 const postUtils = require("./utils/postUtils");
+const msgUtils = require("./utils/messageUtils");
+
+let test2 = async () => {
+  console.log(
+    await msgUtils.getConversationMessages(
+      "629ed8fc7c48afad0c583543",
+      "62a697719301a87aa0628e80",
+      10
+    )
+  );
+};
+test2();
 
 //postUtils.createPost("629ed8fc7c48afad0c583543", "Bjr");
 /*let main = async () => {

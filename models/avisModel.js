@@ -14,5 +14,3 @@ let schema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("Avis", schema);
-
-//TODO gérer CRUD
