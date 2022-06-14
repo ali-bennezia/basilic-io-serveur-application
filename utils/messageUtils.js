@@ -33,8 +33,13 @@ const convoModel = require("./../models/conversationModel");
 /*
     - Transformation de l'array d'identifiants de médias en array de leur liens.
 */
-exports.convertMessageDocumentToUserReadableFormat = async (msg) => {
-  let medias = msg.medias
+exports.convertMessageDocumentToUserReadableFormat = async (
+  msg,
+  mediaLinks = null
+) => {
+  let medias = mediaLinks
+    ? mediaLinks
+    : msg.medias
     ? await mediaUtils.getMediaLinkArrayFromMediaIdArray(msg.medias)
     : {};
 
@@ -257,12 +262,9 @@ exports.createMessage = async (
     ...optionalData,
   });
 
-  console.log("test");
   if (!(await this.doesConversationExist(senderUserId, receiverUserId))) {
-    console.log("1");
     await this.registerConversation(senderUserId, receiverUserId);
   } else {
-    console.log("2");
     await convoModel.findOneAndUpdate(
       {
         $or: [

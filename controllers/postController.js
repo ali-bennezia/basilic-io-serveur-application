@@ -78,11 +78,11 @@ exports.createPost = async function (req, res) {
     if (!"contenu" in req.body || !req.body.contenu)
       return res.status(400).json("Bad Request");
 
-    for (let f of req.files) {
-      if (!fileUtils.validateFile(f.size, f.mimetype))
-        return res.status(400).json("Bad Request");
-      console.log(mimetypes.extension(f.mimetype));
-    }
+    if ("files" in req)
+      for (let f of req.files) {
+        if (!fileUtils.validateFile(f.size, f.mimetype))
+          return res.status(400).json("Bad Request");
+      }
 
     let postCible = null;
     let tokenPayload = req.tokenPayload;
@@ -120,14 +120,15 @@ exports.createPost = async function (req, res) {
       return res.status(400).json("Bad Request");
     let resultMedias = [];
 
-    for (let f of req.files) {
-      let newMedia = await mediaUtils.createMedia(
-        `public/${uuidv1()}.${mimetypes.extension(f.mimetype)}`,
-        f.buffer,
-        tokenPayload.userId
-      );
-      if (newMedia != null) resultMedias.push(newMedia);
-    }
+    if ("files" in req)
+      for (let f of req.files) {
+        let newMedia = await mediaUtils.createMedia(
+          `public/${uuidv1()}.${mimetypes.extension(f.mimetype)}`,
+          f.buffer,
+          tokenPayload.userId
+        );
+        if (newMedia != null) resultMedias.push(newMedia);
+      }
 
     let post = await postUtils.createPost(
       tokenPayload.userId,
@@ -151,7 +152,7 @@ exports.createPost = async function (req, res) {
 
 //PATCH /api/posts/update/:postId
 /*
-  Met à jour un post. C'est à dire, son contenu ou ses médias.
+  Met à jour un post. C'est à dire, son contenu.
   Un token authentique appartenant à un compte valide doit être envoyé par le client.
 */
 exports.editPost = async function (req, res) {

@@ -13,18 +13,32 @@ const msgController = require("./../controllers/messageController");
 
 //API
 
-// GET /conversations/get/:userIdA&:userIdB&:amount&:timestamp
+// GET /conversations/messages/get/:userIdA&:userIdB&:amount&:timestamp
 router.get(
-  "/conversations/get/:userIdA&:userIdB&:amount&:timestamp",
+  "/conversations/messages/get/:userIdA&:userIdB&:amount&:timestamp",
   authMdlw.checkTokenAccountValidity,
   msgController.getConvoMessagesWithTimestamp
 );
 
-// GET /conversations/get/:userIdA&:userIdB&:amount
+// GET /conversations/messages/get/:userIdA&:userIdB&:amount
 router.get(
-  "/conversations/get/:userIdA&:userIdB&:amount",
+  "/conversations/messages/get/:userIdA&:userIdB&:amount",
   authMdlw.checkTokenAccountValidity,
   msgController.getConvoMessages
+);
+
+// GET /conversations/get/:userId&:amount&:timestamp
+router.get(
+  "/conversations/get/:userId&:amount&:timestamp",
+  authMdlw.checkTokenAccountValidity,
+  msgController.getConvosWithTimestamp
+);
+
+// GET /conversations/get/:userId&:amount
+router.get(
+  "/conversations/get/:userId&:amount",
+  authMdlw.checkTokenAccountValidity,
+  msgController.getConvos
 );
 
 module.exports = router;
