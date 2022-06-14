@@ -60,14 +60,35 @@ const msgUtils = require("./utils/messageUtils");
 
 let test2 = async () => {
   console.log(
-    await msgUtils.getConversationMessages(
+    /*await msgUtils.getConversationMessages(
       "629ed8fc7c48afad0c583543",
       "62a697719301a87aa0628e80",
       10
-    )
+    )*/
+
+    await msgUtils.getUserConversations("629ed8fc7c48afad0c583543", 1)
   );
+
+  /*await msgUtils.createMessage(
+    "629ed8fc7c48afad0c583543",
+    "62a697719301a87aa0628e80",
+    "salut"
+  );
+
+  msgUtils.createMessage(
+    "62a697719301a87aa0628e80",
+    "629ed8fc7c48afad0c583543",
+    "yo ! "
+  );*/
+
+  //await msgUtils.removeMessage("62a7f6a8c6ab30045d9817f3");
+  //await msgUtils.removeMessage("62a7f6a8c6ab30045d9817fd");
 };
 test2();
+
+//msgUtils.removeMessage("62a7e91ed65d4b26c4508a83");
+
+//
 
 //postUtils.createPost("629ed8fc7c48afad0c583543", "Bjr");
 /*let main = async () => {

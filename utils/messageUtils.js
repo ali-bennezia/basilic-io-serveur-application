@@ -44,11 +44,14 @@ exports.convertMessageDocumentToUserReadableFormat = async (msg) => {
 /*
   Enregistrer l'existence d'une nouvelle conversation.
 */
-exports.registerConversation = async (userIdA, userIdB) => {
+exports.registerConversation = async (userIdA, userIdB, initialAmount = 1) => {
   //Sanitation des valeurs reçues.
+  let amnt = parseInt(initialAmount);
   if (
     !objectUtils.isObjectValidStringId(userIdA) ||
-    !objectUtils.isObjectValidStringId(userIdB)
+    !objectUtils.isObjectValidStringId(userIdB) ||
+    isNaN(amnt) ||
+    amnt <= 0
   )
     throw "Arguments invalides.";
 
@@ -60,7 +63,9 @@ exports.registerConversation = async (userIdA, userIdB) => {
     throw "L'un ou les utilisateur(s) donné(s) n'existe(nt) pas.";
 
   return await convoModel.create({
-    users: { userIdA: userIdA, userIdB: userIdB },
+    userIdA: userIdA,
+    userIdB: userIdB,
+    nbMessages: amnt,
   });
 };
 
@@ -82,12 +87,10 @@ exports.unregisterConversation = async (userIdA, userIdB) => {
   return await convoModel.findOneAndDelete({
     $or: [
       {
-        users: {
-          userIdA: userIdA,
-          userIdB: userIdB,
-        },
+        userIdA: userIdA,
+        userIdB: userIdB,
       },
-      { users: { userIdA: userIdB, userIdB: userIdA } },
+      { userIdA: userIdB, userIdB: userIdA },
     ],
   });
 };
@@ -111,6 +114,53 @@ exports.getUserConversations = async (userId, amount, timestamp = null) => {
     throw "L'utilisateur n'existe pas.";
 
   //Execution.
+  let optionalTimestampFilter =
+    timestamp != null ? { createdAt: { $lte: timestamp } } : {};
+
+  let rawConvos = await convoModel
+    .find({
+      $or: [{ userIdA: userId }, { userIdB: userId }],
+      ...optionalTimestampFilter,
+    })
+    .sort({ createdAt: -1 })
+    .limit(amnt)
+    .exec();
+
+  let convos = Promise.all(
+    rawConvos.map(async (c) => {
+      let userAndParamsA = await userUtils.getUserAndUserParamsFromUserId(
+        c.userIdA.toString()
+      );
+      let userAndParamsB = await userUtils.getUserAndUserParamsFromUserId(
+        c.userIdB.toString()
+      );
+
+      return {
+        userA: await objectUtils.getUserSummaryProfileData(
+          userAndParamsA.user,
+          userAndParamsA.params
+        ),
+        userB: await objectUtils.getUserSummaryProfileData(
+          userAndParamsB.user,
+          userAndParamsB.params
+        ),
+
+        totalMessages: c.nbMessages,
+
+        unseenMessagesUserA: await messageModel.count({
+          auteur: c.userIdB,
+          cible: c.userIdA,
+          cibleVu: false,
+        }),
+        unseenMessagesUserB: await messageModel.count({
+          auteur: c.userIdA,
+          cible: c.userIdB,
+          cibleVu: false,
+        }),
+      };
+    })
+  );
+  return convos;
 };
 
 exports.doesMessageWithIdExist = async (msgId) =>
@@ -128,9 +178,15 @@ exports.removeMessage = async (msgId) => {
 
   //Execution.
   let msg = await messageModel.findById(msgId);
+  let userIdA = msg.auteur.toString();
+  let userIdB = msg.cible.toString();
 
-  //TODO
-  //await convoModel.findOneAndDelete({$or:[{users:{userIdA:}}]})
+  let convoSearchFilter = {
+    $or: [
+      { userIdA: userIdA, userIdB: userIdB },
+      { userIdA: userIdB, userIdB: userIdA },
+    ],
+  };
 
   if (
     "medias" in msg &&
@@ -142,7 +198,25 @@ exports.removeMessage = async (msgId) => {
     mediaUtils.removeMediasByIds(...msg.medias);
   }
 
-  return await mediaModel.findOneAndDelete({ _id: msgId });
+  let delMsg = await messageModel.findOneAndDelete({ _id: msgId });
+
+  if ((await convoModel.exists(convoSearchFilter)) != null) {
+    let convo = await convoModel.findOne(convoSearchFilter);
+    console.log(convo);
+    if (parseInt(convo.nbMessages) <= 1)
+      await convoModel.findByIdAndDelete(convo._id);
+    else {
+      convo.nbMessages = await messageModel.count({
+        $or: [
+          { auteur: userIdA, cible: userIdB },
+          { auteur: userIdB, cible: userIdA },
+        ],
+      });
+      convo.save();
+    }
+  }
+
+  return delMsg;
 };
 
 /*
@@ -175,14 +249,25 @@ exports.createMessage = async (
 
   let optionalData = mediaIds != null ? { medias: mediaIds } : {};
 
+  let newMsg = await messageModel.create({
+    auteur: senderUserId,
+    cible: receiverUserId,
+    contenu: content,
+    cibleVu: false,
+    ...optionalData,
+  });
+
+  console.log("test");
   if (!(await this.doesConversationExist(senderUserId, receiverUserId))) {
+    console.log("1");
     await this.registerConversation(senderUserId, receiverUserId);
   } else {
+    console.log("2");
     await convoModel.findOneAndUpdate(
       {
         $or: [
-          { users: { userIdA: senderUserId, userIdB: receiverUserId } },
-          { users: { userIdA: receiverUserId, userIdB: senderUserId } },
+          { userIdA: senderUserId, userIdB: receiverUserId },
+          { userIdA: receiverUserId, userIdB: senderUserId },
         ],
       },
       {
@@ -196,25 +281,19 @@ exports.createMessage = async (
     );
   }
 
-  return await messageModel.create({
-    auteur: senderUserId,
-    cible: receiverUserId,
-    contenu: content,
-    cibleVu: false,
-    ...optionalData,
-  });
+  return newMsg;
 };
 
 //Vérifie si une conversation existe.
 exports.doesConversationExist = async (userIdA, userIdB) => {
   return (
     (await convoModel.exists({
-      $or: [
-        {
-          users: { userIdA: userIdA, userIdB: userIdB },
-        },
-        { users: { userIdA: userIdB, userIdB: userIdA } },
-      ],
+      userIdA: userIdA,
+      userIdB: userIdB,
+    })) != null ||
+    (await convoModel.exists({
+      userIdA: userIdB,
+      userIdB: userIdA,
     })) != null
   );
 };
