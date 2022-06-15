@@ -21,7 +21,7 @@ exports.getMediaByLink = async function (mediaLink) {
   if (typeof mediaLink != "string" && !mediaLink instanceof String)
     throw "Argument invalide.";
 
-  let media = await mediaModel.findOne({ lien: mediaLink });
+  let media = await mediaModel.findOne({ lien: mediaLink }).exec();
   return media;
 };
 
@@ -37,11 +37,12 @@ exports.getMedia = async function (id) {
 
 exports.checkUserMediaAccessByUserId = async function (mediaLink, userId) {
   let media = await this.getMediaByLink(mediaLink);
+  let strDroitsVisible = media.droitsVisible.map((id) => id.toString());
   return (
     media &&
     (!"mediaPublic" in media ||
       media.mediaPublic == true ||
-      ("droitsVisible" in media && media.droitsVisible.includes(userId)))
+      ("droitsVisible" in media && strDroitsVisible.includes(userId)))
   );
 };
 
@@ -55,9 +56,7 @@ exports.createMedia = async function (
   if (!mediaLink || !mediaBuffer || !userId) throw "Arguments manquants.";
   if (
     (!(mediaLink instanceof String || typeof mediaLink == "string") &&
-      !(
-        generateUserIdSession instanceof String || typeof userId == "string"
-      )) ||
+      !(userId instanceof String || typeof userId == "string")) ||
     !(await userModel.model.exists({ _id: userId }))
   )
     throw "Arguments invalides.";

@@ -32,6 +32,7 @@ const convoModel = require("./../models/conversationModel");
 //Convertir un document représentant un message en un format lisible par le client.
 /*
     - Transformation de l'array d'identifiants de médias en array de leur liens.
+    - Récupération des profils des interlocuteurs.
 */
 exports.convertMessageDocumentToUserReadableFormat = async (
   msg,
@@ -43,7 +44,10 @@ exports.convertMessageDocumentToUserReadableFormat = async (
     ? await mediaUtils.getMediaLinkArrayFromMediaIdArray(msg.medias)
     : {};
 
-  return { ...msg, medias: medias };
+  return {
+    ...msg,
+    medias: medias,
+  };
 };
 
 /*
@@ -407,4 +411,25 @@ exports.getConversation = async (conversationUserIdA, conversationUserIdB) => {
   };
 
   return data;
+};
+
+exports.getMessage = async (msgId) => {
+  if (!objectUtils.isObjectValidStringId(msgId)) throw "Argument invalide.";
+  if (!(await this.doesMessageWithIdExist(msgId))) return null;
+  return await messageModel.findById(msgId);
+};
+
+exports.updateMessage = async (msgId, newContent) => {
+  if (
+    !objectUtils.isObjectValidStringId(msgId) ||
+    !objectUtils.isObjectString(newContent)
+  )
+    throw "Argument invalide.";
+  if (!(await this.doesMessageWithIdExist(msgId)))
+    throw "Le message n'existe pas.";
+  return await messageModel.findByIdAndUpdate(
+    msgId,
+    { contenu: newContent },
+    { new: true }
+  );
 };

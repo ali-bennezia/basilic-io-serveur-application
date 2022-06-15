@@ -58,6 +58,8 @@ const mediaUtils = require("./utils/mediaUtils");
 const postUtils = require("./utils/postUtils");
 const msgUtils = require("./utils/messageUtils");
 
+//msgUtils.removeMessage("62a95fb0d574dad703b00242");
+
 let test2 = async () => {
   console.log(
     /*await msgUtils.getConversationMessages(

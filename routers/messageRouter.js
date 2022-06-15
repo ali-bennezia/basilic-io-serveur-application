@@ -3,6 +3,10 @@
 const express = require("express");
 const router = express.Router();
 
+//Librairies.
+
+const multer = require("multer");
+
 //Middlewares.
 
 const authMdlw = require("./../middlewares/authentificationMiddlewares");
@@ -39,6 +43,28 @@ router.get(
   "/conversations/get/:userId&:amount",
   authMdlw.checkTokenAccountValidity,
   msgController.getConvos
+);
+
+// POST /conversations/messages/post
+router.post(
+  "/conversations/messages/post",
+  authMdlw.checkTokenAccountValidity,
+  multer().array("medias"),
+  msgController.postMessage
+);
+
+// DELETE /conversations/messages/delete/:messageId
+router.delete(
+  "/conversations/messages/delete/:messageId",
+  authMdlw.checkTokenAccountValidity,
+  msgController.deleteMessage
+);
+
+// PUT /conversations/messages/update/:messageId
+router.put(
+  "/conversations/messages/update/:messageId",
+  authMdlw.checkTokenAccountValidity,
+  msgController.updateMessage
 );
 
 module.exports = router;

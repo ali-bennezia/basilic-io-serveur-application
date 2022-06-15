@@ -16,7 +16,7 @@ const mimetypes = require("mime-types");
 // GET /conversations/messages/get/:userIdA&:userIdB&:amount&:timestamp
 /*
     Récupère les messages d'une conversation, avec timestamp.
-    Le client doit envoyé un token valide pour y avoir accès.
+    Le client doit envoyer un token valide pour y avoir accès.
     L'utilisateur rattaché au token doit être l'un des deux interlocuteurs de la conversation.
 */
 exports.getConvoMessagesWithTimestamp = async function (req, res) {
@@ -65,7 +65,7 @@ exports.getConvoMessagesWithTimestamp = async function (req, res) {
 // GET /conversations/messages/get/:userIdA&:userIdB&:amount
 /*
     Récupère les messages d'une conversation.
-    Le client doit envoyé un token valide pour y avoir accès.
+    Le client doit envoyer un token valide pour y avoir accès.
     L'utilisateur rattaché au token doit être l'un des deux interlocuteurs de la conversation.
 */
 exports.getConvoMessages = async function (req, res) {
@@ -110,6 +110,9 @@ exports.getConvoMessages = async function (req, res) {
 };
 
 // GET /conversations/get/:userId&:amount&:timestamp
+/*
+  Récupère une liste de conversations liées à un utilisateur, avec timestamp.
+*/
 exports.getConvosWithTimestamp = async function (req, res) {
   try {
     //Sanitation des valeurs reçues.
@@ -146,6 +149,9 @@ exports.getConvosWithTimestamp = async function (req, res) {
 };
 
 // GET /conversations/get/:userId&:amount
+/*
+  Récupère une liste de conversations liées à un utilisateur.
+*/
 exports.getConvos = async function (req, res) {
   try {
     //Sanitation des valeurs reçues.
@@ -187,22 +193,35 @@ exports.getConvos = async function (req, res) {
   - Data : {
     contenu : <Contenu du message>
     cibleUserId : <Id de l'utilisateur ciblé>
+  - medias : les medias, qui doivent ensuite être visible dans req.files
   }
 */
 exports.postMessage = async function (req, res) {
   try {
     //Sanitation des valeurs reçues.
+
+    let data = null;
+    if ("data" in req.body && req.body.data)
+      try {
+        data = JSON.parse(req.body.data);
+      } catch (err) {
+        data = null;
+      }
+
     if (
-      !"data" in req.body ||
-      !req.body.data ||
-      !"contenu" in req.body.data ||
-      !req.body.data.contenu ||
-      !objectUtils.containsOnlyGivenArrayElementsAsProperties(req.body.data, [
+      !data ||
+      !"contenu" in data ||
+      !data.contenu ||
+      !objectUtils.containsOnlyGivenArrayElementsAsProperties(req.body, [
+        "data",
+        "medias",
+      ]) ||
+      !objectUtils.containsOnlyGivenArrayElementsAsProperties(data, [
         "contenu",
         "cibleUserId",
       ]) ||
-      !objectUtils.isObjectValidStringId(req.body.data.cibleUserId) ||
-      !objectUtils.isObjectString(req.body.data.contenu)
+      !objectUtils.isObjectValidStringId(data.cibleUserId) ||
+      !objectUtils.isObjectString(data.contenu)
     )
       return res.status(400).json("Bad Request");
 
@@ -210,7 +229,7 @@ exports.postMessage = async function (req, res) {
     let clientUserId = req.tokenPayload.userId;
 
     if (
-      !(await userUtils.doesUserIdExist(req.body.data.cibleUserId)) ||
+      !(await userUtils.doesUserIdExist(data.cibleUserId)) ||
       !(await userUtils.doesUserIdExist(clientUserId))
     )
       return res.status(404).json("Not Found");
@@ -224,7 +243,7 @@ exports.postMessage = async function (req, res) {
     if (
       !(await userUtils.doesUserIdHaveAccessToUserIdDomain(
         clientUserId,
-        req.body.data.cibleUserId
+        data.cibleUserId
       ))
     )
       return res.status(403).json("Forbidden");
@@ -235,11 +254,11 @@ exports.postMessage = async function (req, res) {
       for (let f of req.files) {
         msgMedias.push(
           await mediaUtils.createMedia(
-            `public/${uuidv4()}.${mimetype.extension(f.mimetype)}`,
+            `private/${uuidv4()}.${mimetypes.extension(f.mimetype)}`,
             f.buffer,
             clientUserId,
             false,
-            ["clientUserId", req.body.data.cibleUserId]
+            [clientUserId, data.cibleUserId]
           )
         );
       }
@@ -249,16 +268,104 @@ exports.postMessage = async function (req, res) {
 
     let newMsg = await msgUtils.createMessage(
       clientUserId,
-      req.body.data.cibleUserId,
-      req.body.data.contenu,
+      data.cibleUserId,
+      data.contenu,
       mediaIds
     );
 
-    let formattedMsg = msgUtils.convertMessageDocumentToUserReadableFormat(
-      newMsg,
-      mediaLinks
-    );
-    return formattedMsg; //TODO à tester
+    let formattedMsg =
+      await msgUtils.convertMessageDocumentToUserReadableFormat(
+        newMsg._doc,
+        mediaLinks
+      );
+    return res.status(201).json(formattedMsg);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("Internal Server Error");
+  }
+};
+
+// DELETE /conversations/messages/delete/:messageId
+/*
+  Permet la supression d'un message.
+  Le client doit justifier d'un token valide.
+  Le client doit soit être administrateur, soit être le propriétaire du message.
+*/
+exports.deleteMessage = async function (req, res) {
+  try {
+    //Sanitation des valeurs reçues.
+    if (
+      !"messageId" in req.params ||
+      !req.params.messageId ||
+      !(await objectUtils.isObjectValidStringId(req.params.messageId))
+    )
+      return res.status(400).json("Bad Request");
+
+    //Validation des valeurs reçues.
+    let clientUserId = req.tokenPayload.userId;
+    let isClientAdmin = await userUtils.isUserIdAdmin(clientUserId);
+
+    let msg = await msgUtils.getMessage(req.params.messageId);
+    if (!msg) return res.status(404).json("Not Found");
+    let messageOwnerUserId = msg.auteur.toString();
+
+    if (!isClientAdmin && clientUserId != messageOwnerUserId)
+      return res.status(403).json("Forbidden");
+
+    //Execution.
+    msgUtils.removeMessage(req.params.messageId);
+    return res.status(204).json("No Content");
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("Internal Server Error");
+  }
+};
+
+// PUT /conversations/messages/update/:messageId
+/*
+  Modifie un message.
+  Le client doit justifier d'un token valide.
+  Le client doit être le propriétaire du message.
+
+  La requête envoyée par le client doit contenir en son corps, un objet de la forme:
+  {
+    newContent: <Nouveau contenu>
+  }
+*/
+exports.updateMessage = async function (req, res) {
+  try {
+    //Sanitation des valeurs reçues.
+    if (
+      !"messageId" in req.params ||
+      !req.params.messageId ||
+      !objectUtils.isObjectValidStringId(req.params.messageId) ||
+      !"newContent" in req.body ||
+      !req.body.newContent ||
+      !objectUtils.isObjectString(req.body.newContent) ||
+      !objectUtils.containsOnlyGivenArrayElementsAsProperties(req.body, [
+        "newContent",
+      ])
+    )
+      return res.status(400).json("Bad Request");
+
+    //Validation des valeurs reçues.
+    if (!(await msgUtils.doesMessageWithIdExist(req.params.messageId)))
+      return res.status(404).json("Not Found");
+
+    //Validation des droits d'accès.
+    let clientUserId = req.tokenPayload.userId;
+    let msg = await msgUtils.getMessage(req.params.messageId);
+    if (!msg) return res.status(404).json("Not Found");
+    let messageOwnerUserId = msg.auteur.toString();
+    if (clientUserId != messageOwnerUserId)
+      return res.status(403).json("Forbidden");
+
+    //Execution.
+    return res
+      .status(200)
+      .json(
+        await msgUtils.updateMessage(req.params.messageId, req.body.newContent)
+      );
   } catch (err) {
     console.log(err);
     return res.status(500).json("Internal Server Error");
