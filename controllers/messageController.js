@@ -193,8 +193,8 @@ exports.getConvos = async function (req, res) {
   - Data : {
     contenu : <Contenu du message>
     cibleUserId : <Id de l'utilisateur ciblé>
-  - medias : les medias, qui doivent ensuite être visible dans req.files
   }
+  - medias : les medias, qui doivent ensuite être visible dans req.files
 */
 exports.postMessage = async function (req, res) {
   try {
@@ -364,7 +364,14 @@ exports.updateMessage = async function (req, res) {
     return res
       .status(200)
       .json(
-        await msgUtils.updateMessage(req.params.messageId, req.body.newContent)
+        await msgUtils.convertMessageDocumentToUserReadableFormat(
+          (
+            await msgUtils.updateMessage(
+              req.params.messageId,
+              req.body.newContent
+            )
+          )._doc
+        )
       );
   } catch (err) {
     console.log(err);

@@ -32,7 +32,6 @@ const convoModel = require("./../models/conversationModel");
 //Convertir un document représentant un message en un format lisible par le client.
 /*
     - Transformation de l'array d'identifiants de médias en array de leur liens.
-    - Récupération des profils des interlocuteurs.
 */
 exports.convertMessageDocumentToUserReadableFormat = async (
   msg,
@@ -134,8 +133,7 @@ exports.getUserConversations = async (userId, amount, timestamp = null) => {
     .sort({ createdAt: -1 })
     .limit(amnt)
     .exec();
-
-  let convos = Promise.all(
+  let convos = await Promise.all(
     rawConvos.map(async (c) => {
       let userAndParamsA = await userUtils.getUserAndUserParamsFromUserId(
         c.userIdA.toString()
@@ -143,7 +141,7 @@ exports.getUserConversations = async (userId, amount, timestamp = null) => {
       let userAndParamsB = await userUtils.getUserAndUserParamsFromUserId(
         c.userIdB.toString()
       );
-
+      console.log("A");
       return {
         userA: await objectUtils.getUserSummaryProfileData(
           userAndParamsA.user,
@@ -169,6 +167,7 @@ exports.getUserConversations = async (userId, amount, timestamp = null) => {
       };
     })
   );
+  console.log("B");
   return convos;
 };
 
@@ -347,7 +346,7 @@ exports.getConversationMessages = async (
     .limit(amnt)
     .exec();
 
-  msgs = Promise.all(
+  msgs = await Promise.all(
     msgs.map(
       async (el) =>
         await this.convertMessageDocumentToUserReadableFormat(el._doc)

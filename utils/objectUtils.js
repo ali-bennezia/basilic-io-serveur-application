@@ -78,6 +78,21 @@ exports.containsOnlyGivenArrayElementsAsProperties = (
 };
 
 /*
+  Renvoie false si la liste contient au moins une propriété dont le nom ne correspond pas à une chaine de charactère dans la liste propertyNames, true sinon.
+*/
+exports.arrayContainsOnlyGivenArrayElementsAsProperties = (
+  object,
+  propertyNames
+) => {
+  for (const prop of object)
+    if (!propertyNames.includes(prop)) {
+      return false;
+    }
+
+  return true;
+};
+
+/*
   Renvoie false si l'objet contient au moins une propriété dont le nom ne correspond pas à une propriété d'utilisateur pouvant être mise à jour, true sinon.
 */
 const updatableUserData = ["motDePasse", "email", "numeroTelephone"];
@@ -167,11 +182,11 @@ exports.getUserSummaryProfileData = async (user, userParams) => {
     profileData.profilPublic = userParams.profilPublic;
   if ("photoProfil" in userParams && userParams.photoProfil)
     profileData.photoProfil = await mediaUtils.getMediaLinkFromId(
-      userParams.photoProfil
+      userParams.photoProfil.toString()
     );
   if ("banniereProfil" in userParams && userParams.banniereProfil)
     profileData.banniereProfil = await mediaUtils.getMediaLinkFromId(
-      userParams.banniereProfil
+      userParams.banniereProfil.toString()
     );
   if ("descriptionProfil" in userParams && userParams.descriptionProfil)
     profileData.descriptionProfil = userParams.descriptionProfil;

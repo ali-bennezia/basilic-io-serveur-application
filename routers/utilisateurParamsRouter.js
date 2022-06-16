@@ -3,6 +3,10 @@
 const express = require("express");
 const router = express.Router();
 
+//Utilitaires.
+
+const multer = require("multer");
+
 //Contrôleurs.
 
 const utilisateurParamsController = require("./../controllers/utilisateurParamsController");
@@ -17,6 +21,7 @@ const authentificationMiddlewares = require("./../middlewares/authentificationMi
 router.patch(
   "/patch/:id",
   authentificationMiddlewares.checkTokenAuthenticity,
+  multer().any(),
   utilisateurParamsController.patchParams
 );
 

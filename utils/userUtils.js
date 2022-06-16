@@ -7,6 +7,7 @@
 const objectUtils = require("./objectUtils");
 const postUtils = require("./postUtils");
 const followUtils = require("./followUtils");
+const mediaUtils = require("./mediaUtils");
 
 //Modèles.
 
@@ -90,10 +91,15 @@ exports.deleteUserFromId = async (id) => {
   //Suppression de tous les posts en asynchrone.
   postUtils.removePostsFromUserId(id);
 
+  //Supression des médias liés aux paramètres.
+  let params = await this.getUserParamsFromUserId(id);
+  let paramMedias = [];
+  if ("photoProfil" in params) paramMedias.push(params.photoProfil);
+  if ("banniereProfil" in params) paramMedias.push(params.banniereProfil);
+  await mediaUtils.removeMediasByIds(...paramMedias);
+
   //Suppresion des paramètres.
-  await userParamsModel.findOneAndRemove({
-    utilisateur: id,
-  });
+  await userParamsModel.findByIdAndDelete(params._id);
 
   //Suppresion de l'utilisateur.
   await userModel.model.deleteOne({ _id: id });
