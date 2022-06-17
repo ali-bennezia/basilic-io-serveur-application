@@ -2,6 +2,11 @@
   Utilitaire pour ce qui concerne les messages de tchat.
 */
 
+//Librairies
+
+const Cryptr = require("cryptr");
+const cryptr = new Cryptr(process.env.ENCRYPTION_PRIVATE_KEY);
+
 //Utilitaires.
 
 const objectUtils = require("./objectUtils");
@@ -352,6 +357,10 @@ exports.getConversationMessages = async (
         await this.convertMessageDocumentToUserReadableFormat(el._doc)
     )
   );
+
+  msgs = msgs.map((msg) => {
+    return { ...msg, contenu: cryptr.decrypt(msg.contenu) };
+  });
 
   return msgs;
 };

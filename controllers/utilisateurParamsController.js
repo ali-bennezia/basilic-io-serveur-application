@@ -40,7 +40,6 @@ const updatableParamMediaProperties = ["photoProfil", "banniereProfil"];
   }
   Dans req.files doivent se trouver les fichiers liés aux paramètres-médias devant êtres mis à jour.
 */
-//TODO: A tester
 exports.patchParams = async function (req, res) {
   try {
     let payload = req.tokenPayload;
@@ -149,11 +148,15 @@ exports.patchParams = async function (req, res) {
     }
 
     //Suppression des paramètres-médias tel que demandé par le client.
-    let awaitingSuppressionMediaIds = Object.keys(newParams)
+    let awaitingSuppressionMediaParamFields = Object.keys(newParams)
       .filter((k) => updatableParamMediaProperties.includes(k))
-      .filter((k) => k in userParams)
-      .map((rmMediaField) => userParams[rmMediaField].toString());
+      .filter((k) => k in userParams);
+    let awaitingSuppressionMediaIds = awaitingSuppressionMediaParamFields.map(
+      (rmMediaField) => userParams[rmMediaField].toString()
+    );
     mediaUtils.removeMediasByIds(...awaitingSuppressionMediaIds);
+
+    for (let f of awaitingSuppressionMediaParamFields) delete newParams[f];
 
     //Envoi des nouveaux paramètres.
     userParams = {

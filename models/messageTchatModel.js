@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const Cryptr = require("cryptr");
+const cryptr = new Cryptr(process.env.ENCRYPTION_PRIVATE_KEY);
 
 let schema = new mongoose.Schema(
   {
@@ -19,6 +21,10 @@ let schema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+schema.pre("save", async function () {
+  if (this.isModified("contenu")) this.contenu = cryptr.encrypt(this.contenu);
+});
 
 module.exports = mongoose.model("MessageTchat", schema);
 

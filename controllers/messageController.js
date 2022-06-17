@@ -190,7 +190,7 @@ exports.getConvos = async function (req, res) {
   Il faut également prendre en charge les médias possiblement envoyés avec le contenu de message.
 
   Dans le corp de la requête doivent êtres reçues les informations dans le formData sous la forme:
-  - Data : {
+  - data : {
     contenu : <Contenu du message>
     cibleUserId : <Id de l'utilisateur ciblé>
   }
@@ -278,7 +278,7 @@ exports.postMessage = async function (req, res) {
         newMsg._doc,
         mediaLinks
       );
-    return res.status(201).json(formattedMsg);
+    return res.status(201).json({ ...formattedMsg, contenu: data.contenu });
   } catch (err) {
     console.log(err);
     return res.status(500).json("Internal Server Error");
