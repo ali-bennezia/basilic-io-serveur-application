@@ -37,7 +37,7 @@ exports.registerUser = async function (req, res) {
 
 // POST /api/users/signin
 /*
-    Connection à un compte.
+    Connexion à un compte.
     Vérification au niveau des informations de connection envoyées.
     Si tout est correct, création d'un token et envoi des informations de la session de connection.
 */

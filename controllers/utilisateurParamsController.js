@@ -40,7 +40,7 @@ const updatableParamMediaProperties = ["photoProfil", "banniereProfil"];
   }
   Dans req.files doivent se trouver les fichiers liés aux paramètres-médias devant êtres mis à jour.
 */
-//TODO: Ajouter l'envoi de médias pour les paramètres (photo de profil, bannière, etc ...)
+//TODO: A tester
 exports.patchParams = async function (req, res) {
   try {
     let payload = req.tokenPayload;
@@ -83,8 +83,8 @@ exports.patchParams = async function (req, res) {
     if (user._id.toString() != tokenUser._id.toString())
       return res.status(403).json("Forbidden");
 
-    //On vérifie les fichiers puis on enregistre leur médias séparément.
-    let allFieldNames = req.files.map((e) => e.fieldname);
+    //On vérifie les fichiers.
+    let allFieldNames = "files" in req ? req.files.map((e) => e.fieldname) : [];
     if ("files" in req && Array.isArray(req.files) && req.files.length != 0) {
       if (
         !objectUtils.arrayContainsOnlyGivenArrayElementsAsProperties(
@@ -99,8 +99,19 @@ exports.patchParams = async function (req, res) {
           return res.status(400).json("Bad Request");
     }
 
+    //On vérifie qu'on ne nous envoie pas à la fois un fichier pour un paramètre et à la fois un paramètre dans l'objet newParams.
     for (let fn of allFieldNames)
       if (fn in newParams) return res.status(400).json("Bad Request");
+
+    //On vérifie qu'il n'y a pas de dupliqués.
+    if (allFieldNames.length != new Set(allFieldNames).size)
+      return res.status(400).json("Bad Request");
+
+    //On vérifie que toute propriété présente dans l'objet newParams et qui correspond à un média est bien égale à null.
+    for (let p in newParams) {
+      if (updatableParamMediaProperties.includes(p) && newParams[p] != null)
+        return res.status(400).json("Bad Request");
+    }
 
     //Execution.
 
@@ -137,8 +148,14 @@ exports.patchParams = async function (req, res) {
       newMedias[prop] = newMedias[prop]._id.toString();
     }
 
-    //Envoi des nouveaux paramètres.
+    //Suppression des paramètres-médias tel que demandé par le client.
+    let awaitingSuppressionMediaIds = Object.keys(newParams)
+      .filter((k) => updatableParamMediaProperties.includes(k))
+      .filter((k) => k in userParams)
+      .map((rmMediaField) => userParams[rmMediaField].toString());
+    mediaUtils.removeMediasByIds(...awaitingSuppressionMediaIds);
 
+    //Envoi des nouveaux paramètres.
     userParams = {
       ...objectUtils.overwriteAndAddObjectProperties(
         userParams._doc,
