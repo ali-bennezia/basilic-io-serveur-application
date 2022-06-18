@@ -12,6 +12,7 @@ const compulsoryEnvVariables = [
   "ACCEPTED_MEDIA_MIMETYPES",
   "MAX_MEDIA_SIZE_BYTES",
   "ENCRYPTION_PRIVATE_KEY",
+  "WEB_URL_ROOT",
 ];
 
 exports.checkEnvVariables = () => {

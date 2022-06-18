@@ -10,6 +10,14 @@ exports.schemaObject = {
   codeValidation: { type: String, required: false },
   iatValidation: { type: Date, required: false },
   administrateur: { type: Boolean, required: false },
+
+  /*
+    Ici, DMR est l'acronyme pour "Demande de Réinitialisation de Mot de passe".
+    Ce sont des valeurs stoquées sur la base de donnée et qui permettent de gérer les demandes de réinitialisation de mots de passe, tout simplement.
+  */
+  derniereDateDMR: { type: Date, required: false },
+  derniereCleeDMR: { type: String, required: false },
+  derniereAdresseIPDMR: { type: String, required: false },
 };
 
 const schema = new mongoose.Schema(this.schemaObject, { timestamps: true });
@@ -17,6 +25,8 @@ const schema = new mongoose.Schema(this.schemaObject, { timestamps: true });
 schema.pre("save", async function () {
   if (this.isModified("motDePasse"))
     this.motDePasse = await bcrypt.hash(this.motDePasse, 10);
+  if (this.isModified("derniereCleeDMR"))
+    this.derniereCleeDMR = await bcrypt.hash(this.derniereCleeDMR, 15);
 });
 
 exports.model = mongoose.model("Utilisateur", schema);
@@ -32,6 +42,9 @@ const ignoredSchemaPropertiesInsertion = [
   "administrateur",
   "codeValidation",
   "iatValidation",
+  "derniereDateDMR",
+  "derniereCleeDMR",
+  "derniereAdresseIPDMR",
 ];
 
 for (const property in this.userInsertionDataForm) {

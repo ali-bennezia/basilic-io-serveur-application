@@ -40,7 +40,7 @@ exports.sendEmailCode = async (code, recipientMail) => {
     from: `"Basilic" ${process.env.EMAIL_USER}`,
     to: recipientMail,
     subject: "Basilic - Code de validation",
-    text: `Un compte lié à votre adresse email sur notre réseau social Basilic.io est sur le point d'être validé. Utilisez le code ${code} afin de le valider. Si vous n'êtres pas propriétaire de ce compte, veuillez ignorer ce message.`,
+    text: `Un compte lié à votre adresse email sur notre réseau social Basilic.io est sur le point d'être validé. Utilisez le code ${code} afin de le valider. Si vous n'êtes pas propriétaire de ce compte, veuillez ignorer ce message.`,
     html: `<p>Un compte lié à votre adresse email sur notre réseau social Basilic.io est sur le point d'être validé.
      Utilisez le code</p> <h1>${code}</h1><p> afin de le valider. Si vous n'êtres pas propriétaire de ce compte, veuillez ignorer ce message.</p>`,
   });
@@ -48,7 +48,7 @@ exports.sendEmailCode = async (code, recipientMail) => {
 
 exports.sendSMSCode = async (code, recipientPhoneNumber) => {
   twilioClient.messages.create({
-    body: `Un compte lié à votre adresse email sur notre réseau social Basilic.io est sur le point d'être validé. Utilisez le code ${code} afin de le valider. Si vous n'êtres pas propriétaire de ce compte, veuillez ignorer ce message.`,
+    body: `Un compte lié à votre adresse email sur notre réseau social Basilic.io est sur le point d'être validé. Utilisez le code ${code} afin de le valider. Si vous n'êtes pas propriétaire de ce compte, veuillez ignorer ce message.`,
     from: `+${process.env.TWILIO_PHONE_NUMBER}`,
     to: `+${recipientPhoneNumber}`,
   });
