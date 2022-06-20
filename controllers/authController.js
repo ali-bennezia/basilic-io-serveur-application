@@ -16,7 +16,39 @@ const bcrypt = require("bcrypt");
 
 //API
 
+// POST /api/auth/token/refresh
+/*
+  Permet d'obtenir un nouveau token plus récent.
+  Le corps doit contenir un objet de la forme:
+  {
+    token:<Token valide>
+  }
+  Le token donné doit être valide. Il est celui que le client souhaite remettre à jour.
+*/
+exports.refreshToken = async function (req, res) {
+  try {
+    if (!"token" in req.body || !objectUtils.isObjectString(req.body.token))
+      return res.status(400).json("Bad Request");
+
+    let payload = null;
+    try {
+      payload = await authUtils.authentifySessionToken(req.body.token);
+    } catch (err) {}
+
+    if (!payload) return res.status(401).json("Unauthorized");
+
+    let newSession = await authUtils.generateUserIdSession(payload.userId);
+    return res.status(200).json(newSession);
+  } catch (err) {
+    console.log(err);
+    req.status(500).json("Internal Server Error");
+  }
+};
+
 // POST /api/auth/token/authentify
+/*
+  Permet l'authentification d'un token ainsi que de ses droits d'accès à des médias.
+*/
 exports.authentifyToken = async function (req, res) {
   try {
     if (!"token" in req.body || !req.body.token) {
@@ -162,7 +194,7 @@ exports.authentifyPasswordRecoveryKey = async function (req, res) {
       !"derniereAdresseIPDRM" in usr ||
       usr.derniereAdresseIPDRM != req.ip ||
       !"derniereCleeDRM" in usr ||
-      bcrypt.compareSync(req.params.key, usr.derniereCleeDRM)
+      !bcrypt.compareSync(req.params.key, usr.derniereCleeDRM)
     )
       return res.status(401).json("Unauthorized");
 
@@ -211,7 +243,7 @@ exports.reinitPassword = async function (req, res) {
     if (
       !usr ||
       !"codeRM" in usr ||
-      usr.codeRM != req.params.code ||
+      !bcrypt.compareSync(req.params.code, usr.codeRM) ||
       !"codeRMDate" in usr ||
       (currentDate - usr.codeRMDate) / 1000 >
         parseInt(process.env.PASSWORD_REINIT_CODE_TIMEOUT_SECONDS ?? 600)
