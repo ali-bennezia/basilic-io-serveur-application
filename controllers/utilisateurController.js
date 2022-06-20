@@ -61,7 +61,7 @@ exports.signinUser = async function (req, res) {
       return;
     }
 
-    let sessionData = await authUtils.generateUserSession(user, req.ip);
+    let sessionData = await authUtils.generateUserSession(user);
     res.status(200).json(sessionData);
   } catch (err) {
     console.log(err);

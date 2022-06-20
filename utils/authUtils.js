@@ -14,7 +14,11 @@ const objectUtils = require("./objectUtils");
 
 const userModel = require("../models/utilisateurModel");
 
-exports.generateUserSession = async (user, remoteClientAddress, config) => {
+exports.generateUserSession = async (
+  user,
+  config,
+  additionalPayloadData = {}
+) => {
   if (
     !objectUtils.containsUniqueUserData(user) ||
     !(await userModel.model.findOne(objectUtils.getUniqueUserData(user)))
@@ -25,6 +29,7 @@ exports.generateUserSession = async (user, remoteClientAddress, config) => {
     userId: user._id,
     valid: user.valide ?? true,
     admin: user.administrateur,
+    ...additionalPayloadData,
   };
 
   let defaultTime = process.env.DEFAULT_TOKEN_EXPIRATION_TIME ?? "1d";
@@ -42,11 +47,11 @@ exports.generateUserSession = async (user, remoteClientAddress, config) => {
   return { token: token, admin: user.administrateur, userId: user._id };
 };
 
-exports.generateUserIdSession = async (id, remoteClientAddress, config) => {
+exports.generateUserIdSession = async (id, config) => {
   let user = await userModel.model.findOne({ _id: id });
   if (!user) throw "L'identifiant envoyé est incorrect.";
 
-  return await this.generateUserSession(user, remoteClientAddress, config);
+  return await this.generateUserSession(user, config);
 };
 
 exports.authentifySessionToken = async (token) => {

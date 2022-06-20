@@ -12,12 +12,18 @@ exports.schemaObject = {
   administrateur: { type: Boolean, required: false },
 
   /*
-    Ici, DMR est l'acronyme pour "Demande de Réinitialisation de Mot de passe".
+    Ici, DRM est l'acronyme pour "Demande de Réinitialisation de Mot de passe".
     Ce sont des valeurs stoquées sur la base de donnée et qui permettent de gérer les demandes de réinitialisation de mots de passe, tout simplement.
   */
-  derniereDateDMR: { type: Date, required: false },
-  derniereCleeDMR: { type: String, required: false },
-  derniereAdresseIPDMR: { type: String, required: false },
+  derniereDateDRM: { type: Date, required: false },
+  derniereCleeDRM: { type: String, required: false },
+  derniereAdresseIPDRM: { type: String, required: false },
+
+  /*
+    Code de réinitialisation de mot de passe. Doit être hashé par bcrypt.
+  */
+  codeRM: { type: String, required: false },
+  codeRMDate: { type: Date, required: false },
 };
 
 const schema = new mongoose.Schema(this.schemaObject, { timestamps: true });
@@ -25,8 +31,10 @@ const schema = new mongoose.Schema(this.schemaObject, { timestamps: true });
 schema.pre("save", async function () {
   if (this.isModified("motDePasse"))
     this.motDePasse = await bcrypt.hash(this.motDePasse, 10);
-  if (this.isModified("derniereCleeDMR"))
-    this.derniereCleeDMR = await bcrypt.hash(this.derniereCleeDMR, 15);
+  if (this.isModified("derniereCleeDRM"))
+    this.derniereCleeDRM = await bcrypt.hash(this.derniereCleeDRM, 15);
+  if (this.isModified("codeRM"))
+    this.codeRM = await bcrypt.hash(this.codeRM, 18);
 });
 
 exports.model = mongoose.model("Utilisateur", schema);
@@ -42,9 +50,11 @@ const ignoredSchemaPropertiesInsertion = [
   "administrateur",
   "codeValidation",
   "iatValidation",
-  "derniereDateDMR",
-  "derniereCleeDMR",
-  "derniereAdresseIPDMR",
+  "derniereDateDRM",
+  "derniereCleeDRM",
+  "derniereAdresseIPDRM",
+  "codeRM",
+  "codeRMDate",
 ];
 
 for (const property in this.userInsertionDataForm) {
