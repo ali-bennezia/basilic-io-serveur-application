@@ -31,6 +31,7 @@ app.use("/api/profiles", require("./routers/profilRouter"));
 app.use("/api/users/params", require("./routers/utilisateurParamsRouter"));
 app.use("/api/users", require("./routers/utilisateurRouter"));
 app.use("/api/messages", require("./routers/messageRouter"));
+app.use("/api/follows", require("./routers/followRouter"));
 
 //Execution.
 

@@ -102,7 +102,7 @@ exports.authentifyToken = async function (req, res) {
 
 //POST /api/auth/recpwd/send&:mode
 /*
-  Demande d'envoi de code en vu de la réinitialisation du mot de passe d'un compte.
+  Demande d'envoi de code en vue de la réinitialisation du mot de passe d'un compte.
   L'utilisateur ne doit envoyer aucun token.
   Dans le corp de la requête doit se trouver un objet de la forme:
   {
