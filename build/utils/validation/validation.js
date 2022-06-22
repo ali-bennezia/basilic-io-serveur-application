@@ -2,8 +2,4 @@
 /*
     Utilitaire pour tout ce qui conçerne la validation.
 */
-class ValidationTests {
-    constructor() {
-        this.tests = [];
-    }
-}
+Object.defineProperty(exports, "__esModule", { value: true });
