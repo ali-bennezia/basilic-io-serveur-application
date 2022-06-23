@@ -37,6 +37,7 @@ export class ValidationTest {
   L'interface IValidationTestsBattery décrit la structure de la classe AbstractValidationTestsBattery.
 */
 export interface IValidationTestsBattery {
+  identifier: string;
   tests: Array<ValidationTest>;
 
   useTest(testIdentifier: string, value: AdmissiblePropertyType): boolean;
@@ -46,13 +47,21 @@ export interface IValidationTestsBattery {
 }
 
 /*
-  La classe AbstractValidationTestsBattery est la classe commune à toutes les classes qui représentent un ensemble de tests.
+  La classe AbstractValidationTestsBattery est la classe représente un ensemble de tests.
 */
-export abstract class AbstractValidationTestsBattery
-  implements IValidationTestsBattery
-{
+export class ValidationTestsBattery implements IValidationTestsBattery {
+  readonly identifier: string;
   tests: Array<ValidationTest> = [];
-  useTest(testIdentifier: string, value: AdmissiblePropertyType): boolean {
+
+  public constructor(identifier: string) {
+    this.identifier = identifier;
+    registerValidationTestsBattery(this);
+  }
+
+  public useTest(
+    testIdentifier: string,
+    value: AdmissiblePropertyType
+  ): boolean {
     for (let test of this.tests) {
       if (test.getIdentifier() == testIdentifier)
         return test.testProperty(value);
@@ -87,18 +96,26 @@ export abstract class AbstractValidationTestsBattery
 
 //Suivi de toutes les batteries de test de validation enregistrées.
 
-var registeredTestsBatteries: AbstractValidationTestsBattery[];
+var registeredTestsBatteries: ValidationTestsBattery[];
 registeredTestsBatteries = [];
 
+export function getValidationTestsAmount(): Number {
+  return registeredTestsBatteries.length;
+}
+
 export function isValidationTestsBatteryRegistered(
-  validationTestsBattery: AbstractValidationTestsBattery
+  identifier: string
 ): boolean {
-  return registeredTestsBatteries.includes(validationTestsBattery);
+  for (let tests of registeredTestsBatteries)
+    if (tests.identifier == identifier) return true;
+  return false;
 }
 
 export function registerValidationTestsBattery(
-  validationTestsBattery: AbstractValidationTestsBattery
+  validationTestsBattery: ValidationTestsBattery
 ) {
-  if (!isValidationTestsBatteryRegistered(validationTestsBattery))
+  if (!isValidationTestsBatteryRegistered(validationTestsBattery.identifier))
     registeredTestsBatteries.push(validationTestsBattery);
 }
+
+exports.test = registerValidationTestsBattery;

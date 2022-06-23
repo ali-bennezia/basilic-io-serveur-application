@@ -1,14 +1,5 @@
 "use strict";
 //Initialization.
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var _a;
 const express = require("express");
 const mongoose = require("mongoose");
@@ -51,70 +42,6 @@ mongoose
 const mediaUtils = require("./utils/mediaUtils");
 const postUtils = require("./utils/postUtils");
 const msgUtils = require("./utils/messageUtils");
-//msgUtils.removeMessage("62a95fb0d574dad703b00242");
-let test2 = () => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(
-    /*await msgUtils.getConversationMessages(
-      "629ed8fc7c48afad0c583543",
-      "62a697719301a87aa0628e80",
-      10
-    )*/
-    yield msgUtils.getUserConversations("629ed8fc7c48afad0c583543", 1));
-    /*await msgUtils.createMessage(
-      "629ed8fc7c48afad0c583543",
-      "62a697719301a87aa0628e80",
-      "salut"
-    );
-  
-    msgUtils.createMessage(
-      "62a697719301a87aa0628e80",
-      "629ed8fc7c48afad0c583543",
-      "yo ! "
-    );*/
-    //await msgUtils.removeMessage("62a7f6a8c6ab30045d9817f3");
-    //await msgUtils.removeMessage("62a7f6a8c6ab30045d9817fd");
-});
-test2();
-//msgUtils.removeMessage("62a7e91ed65d4b26c4508a83");
-//
-//postUtils.createPost("629ed8fc7c48afad0c583543", "Bjr");
-/*let main = async () => {
-  console.log(
-    await postUtils.getPostsFromUser(
-      "629ed8fc7c48afad0c583543",
-      10,
-      "2022-10-16T04:35:47.048Z"
-    )
-  );
-};
-main();*/
-//postUtils.removePost("629d6a19b565ee740e265ab7");
-//mediaUtils.removeMediasByIds()
-/*const fileUtils = require("./utils/fileUtils");
-let buffer = fileUtils.readFile("mycat.jpg");
-mediaUtils.createMedia(
-  "public/mycat.jpg",
-  buffer,
-  "629ed8fc7c48afad0c583543",
-  true,
-  []
-);*/
-//Suppression:
-/*mediaUtils.removeMediaByLink("private/monmedia.jpg");
-mediaUtils.removeMediaByLink("private/test1.jpg");
-mediaUtils.removeMediaByLink("public/maphoto.jpg");*/
-const avisUtils = require("./utils/avisUtils");
-/*avisUtils.createAvis(
-  "629ed8fc7c48afad0c583543",
-  "629ee993601725664882b9bf",
-  "like"
-);*/
-let test = () => __awaiter(void 0, void 0, void 0, function* () {
-    console
-        .log();
-});
-/*avisUtils.removeAvisWithUserIdAndPostId(
-  "629ed8fc7c48afad0c583543",
-  "629ee993601725664882b9bf"
-);*/
-test();
+//let val = require("./utils/validation/validation");
+//import userVal from "./utils/validation/userValidation";
+const test = require("./utils/validation/validation.js").test;
