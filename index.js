@@ -51,16 +51,3 @@ mongoose
       `Erreur lors de la tentative de connection à la base de donnée: ${err}`
     );
   });
-
-//Debug
-
-//Création d'un média de test:
-const mediaUtils = require("./utils/mediaUtils");
-const postUtils = require("./utils/postUtils");
-const msgUtils = require("./utils/messageUtils");
-
-//let val = require("./utils/validation/validation");
-
-//import userVal from "./utils/validation/userValidation";
-
-//const test = require("./utils/validation/validation.js").test;
