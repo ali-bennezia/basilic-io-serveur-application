@@ -83,8 +83,15 @@ exports.registerTest = function (testBatteryId, testId, testFunc) {
 };
 
 //Initialization.
+/*
+  L'initialisation ici vérifie si il y a présence de fichiers dans le dossier autoinit.
+  Elle s'assure de la présence d'une fonction exportée, initValidation, vérifie que le fichier soit bien valide.
+  Exemple: Qu'il est bien en extension .js.
+  Elle execute ensuite la fonction pour chacun des modules chargés issus de ces fichiers.
+*/
 let initFileModules = [];
 let initFiles = fileUtils.getFilesInDirectory("./validation/autoinit");
+
 initFiles = initFiles.filter((f) => {
   let regexMatch = f.match("^.*\\.js$") != null;
   const fileModule = require(`./autoinit/${f}`);
@@ -95,8 +102,11 @@ initFiles = initFiles.filter((f) => {
   if (viability) initFileModules.push(fileModule);
   return viability;
 });
+
 let plur = initFileModules.length != 1;
 let plurStr = plur ? "s" : "";
 console.log(
   `${initFileModules.length} module${plurStr} de validation détecté${plurStr}.`
 );
+
+initFileModules.forEach((m) => m.initValidation());
