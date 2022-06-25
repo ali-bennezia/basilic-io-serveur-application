@@ -51,3 +51,6 @@ mongoose
       `Erreur lors de la tentative de connection à la base de donnée: ${err}`
     );
   });
+
+//Debug.
+const val = require("./validation/validation");
