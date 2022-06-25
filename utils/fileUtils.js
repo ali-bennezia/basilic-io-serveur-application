@@ -71,3 +71,5 @@ exports.validateFile = (sizeInBytes, mimeType) => {
 
   return sizeInBytes <= maxSizeInBytes && validMIMEtypes.includes(mimeType);
 };
+
+exports.getFilesInDirectory = (dir) => fs.readdirSync(dir);

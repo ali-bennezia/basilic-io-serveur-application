@@ -5,6 +5,7 @@
 //Utilitaires.
 
 const objectUtils = require("../utils/objectUtils");
+const fileUtils = require("../utils/fileUtils");
 
 //Implémentation.
 
@@ -41,6 +42,8 @@ class ValidationTestBattery {
 //Liste de toutes les batteries de tests connues.
 testBatteries = [];
 
+//Implémentations.
+
 exports.isTestRegistered = function (testBatteryId, testId) {
   //Sanitation.
   if (!objectUtils.isObjectString(testBatteryId))
@@ -64,6 +67,7 @@ exports.registerTest = function (testBatteryId, testId, testFunc) {
     throw "Argument(s) incorrect(es).";
 
   //Execution.
+
   let knownTestBattery = null;
   for (let testBattery of testBatteries) {
     if (testBattery.identifier == testBatteryId) {
@@ -78,9 +82,21 @@ exports.registerTest = function (testBatteryId, testId, testFunc) {
   }
 };
 
-this.registerTest("maBatterieDeTest", "monTest", (val) => {
-  return false;
+//Initialization.
+let initFileModules = [];
+let initFiles = fileUtils.getFilesInDirectory("./validation/autoinit");
+initFiles = initFiles.filter((f) => {
+  let regexMatch = f.match("^.*\\.js$") != null;
+  const fileModule = require(`./autoinit/${f}`);
+  let viability =
+    regexMatch &&
+    "initValidation" in fileModule &&
+    typeof fileModule.initValidation == "function";
+  if (viability) initFileModules.push(fileModule);
+  return viability;
 });
-
-console.log(testBatteries);
-console.log(testBatteries[0].tests[0]);
+let plur = initFileModules.length != 1;
+let plurStr = plur ? "s" : "";
+console.log(
+  `${initFileModules.length} module${plurStr} de validation détecté${plurStr}.`
+);
