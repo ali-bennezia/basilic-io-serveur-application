@@ -1,0 +1,13 @@
+{
+  "validation": {
+    "user": {
+      "email": {
+        "length": {
+          "min": 3,
+          "max": 65
+        }
+      },
+      "nomUtilisateur": { "length": { "min": 3, "max": 65 } }
+    }
+  }
+}

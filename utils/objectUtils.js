@@ -192,3 +192,7 @@ exports.getUserSummaryProfileData = async (user, userParams) => {
     profileData.descriptionProfil = userParams.descriptionProfil;
   return profileData;
 };
+
+//Vérifie si la longueur de la chaine de charactères est bien comprise entre deux valeurs (inclusives).
+exports.isStringLengthInRange = (str, min, max) =>
+  str.length >= min && str.length <= max;

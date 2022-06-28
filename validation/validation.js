@@ -28,7 +28,7 @@ class ValidationTestBattery {
   }
   isTestRegistered = function (testId) {
     for (let test of this.tests) {
-      if (this.test.testIdentifier == testId) return true;
+      if (test.testIdentifier == testId) return true;
     }
     return false;
   };
