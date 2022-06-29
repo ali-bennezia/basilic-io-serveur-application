@@ -82,6 +82,26 @@ exports.registerTest = function (testBatteryId, testId, testFunc) {
   }
 };
 
+exports.useTest = function (testBatteryId, testId, val) {
+  //Sanitation.
+  if (
+    !objectUtils.isObjectString(testBatteryId) ||
+    !objectUtils.isObjectString(testId)
+  )
+    throw "Argument(s) incorrect(es).";
+
+  //Execution.
+  for (let testBattery of testBatteries) {
+    if (testBattery.identifier != testBatteryId) continue;
+    for (let test of testBattery.tests) {
+      if (test.testIdentifier != testId) continue;
+      return test.testFunction(val);
+    }
+  }
+
+  return null;
+};
+
 //Initialization.
 /*
   L'initialisation ici vérifie si il y a présence de fichiers dans le dossier autoinit.

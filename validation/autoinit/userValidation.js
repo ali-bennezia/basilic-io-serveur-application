@@ -33,10 +33,20 @@ const USER_EMAIL_MAX_LENGTH = config.get("validation.user.email.length.max");
 
 const specialCharactersFormat = /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~\s]/;
 const onlyDigitsFormat = /^[0-9]+$/;
+const onlyCapitalCharsOrDigitsFormat = /^[A-Z0-9]+$/;
 
 //Implémentation.
 
 exports.initValidation = function () {
+  //Test codeValidation
+  validation.registerTest("UserTests", "code", (val) => {
+    return (
+      objectUtils.isObjectString(val) &&
+      val.test(onlyCapitalCharsOrDigitsFormat) &&
+      objectUtils.isStringLengthInRange(val, 1, 40)
+    );
+  });
+
   //Test numeroTelephone
   validation.registerTest("UserTests", "numeroTelephone", (val) => {
     return (

@@ -1,11 +1,59 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
+//Configuration.
+const config = require("config");
+
+const USER_USERNAME_MIN_LENGTH = config.get(
+  "validation.user.nomUtilisateur.length.min"
+);
+const USER_USERNAME_MAX_LENGTH = config.get(
+  "validation.user.nomUtilisateur.length.max"
+);
+
+const USER_PWD_MIN_LENGTH = config.get("validation.user.pwd.length.min");
+const USER_PWD_MAX_LENGTH = config.get("validation.user.pwd.length.max");
+
+const USER_PHONENBR_MIN_LENGTH = config.get(
+  "validation.user.phoneNumber.length.min"
+);
+const USER_PHONENBR_MAX_LENGTH = config.get(
+  "validation.user.phoneNumber.length.max"
+);
+
+const USER_EMAIL_MIN_LENGTH = config.get("validation.user.email.length.min");
+const USER_EMAIL_MAX_LENGTH = config.get("validation.user.email.length.max");
+
+//Implémentation.
+
 exports.schemaObject = {
-  nomUtilisateur: { type: String, required: true, unique: true },
-  motDePasse: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  numeroTelephone: { type: String, required: true, unique: true },
+  nomUtilisateur: {
+    type: String,
+    required: true,
+    unique: true,
+    minlength: USER_USERNAME_MIN_LENGTH,
+    maxlength: USER_USERNAME_MAX_LENGTH,
+  },
+  motDePasse: {
+    type: String,
+    required: true,
+    minlength: USER_PWD_MIN_LENGTH,
+    maxlength: USER_PWD_MAX_LENGTH,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    minlength: USER_EMAIL_MIN_LENGTH,
+    maxlength: USER_EMAIL_MAX_LENGTH,
+  },
+  numeroTelephone: {
+    type: String,
+    required: true,
+    unique: true,
+    minlength: USER_PHONENBR_MIN_LENGTH,
+    maxlength: USER_PHONENBR_MAX_LENGTH,
+  },
   valide: { type: Boolean, required: false },
   codeValidation: { type: String, required: false },
   iatValidation: { type: Date, required: false },
