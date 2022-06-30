@@ -11,6 +11,8 @@ const authUtils = require("../utils/authUtils");
 const stringUtils = require("../utils/stringUtils");
 const codeUtils = require("../utils/codeVerificationUtils");
 
+const validation = require("../validation/validation");
+
 //Modèles.
 
 const userModel = require("../models/utilisateurModel");
@@ -27,6 +29,25 @@ const userModel = require("../models/utilisateurModel");
 */
 exports.registerUser = async function (req, res) {
   try {
+    if (
+      !"email" in req.body ||
+      !validation.useTest("UserTests", "email", req.body.email) ||
+      !"nomUtilisateur" in req.body ||
+      !validation.useTest(
+        "UserTests",
+        "nomUtilisateur",
+        req.body.nomUtilisateur
+      ) ||
+      !"motDePasse" in req.body ||
+      !validation.useTest("UserTests", "motDePasse", req.body.motDePasse) ||
+      !"numeroTelephone" in req.body ||
+      !validation.useTest(
+        "UserTests",
+        "numeroTelephone",
+        req.body.numeroTelephone
+      )
+    )
+      return res.status(400).json("Bad Request");
     await userUtils.addUser(req.body);
     res.status(201).json("Created");
   } catch (err) {
@@ -49,6 +70,19 @@ exports.signinUser = async function (req, res) {
       return;
     }
 
+    if (
+      ("nomUtilisateur" in identifier &&
+        !validation.useTest(
+          "UserTests",
+          "nomUtilisateur",
+          identifier.nomUtilisateur
+        )) ||
+      ("email" in identifier &&
+        !validation.useTest("UserTests", "email", identifier.email)) ||
+      !"motDePasse" in req.body ||
+      !validation.useTest("UserTests", "motDePasse", req.body.motDePasse)
+    )
+      return res.status(400).json("Bad Request");
     let user = await userModel.model.findOne(identifier);
 
     if (!user) {

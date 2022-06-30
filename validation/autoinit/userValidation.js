@@ -42,7 +42,7 @@ exports.initValidation = function () {
   validation.registerTest("UserTests", "code", (val) => {
     return (
       objectUtils.isObjectString(val) &&
-      val.test(onlyCapitalCharsOrDigitsFormat) &&
+      val.match(onlyCapitalCharsOrDigitsFormat) != null &&
       objectUtils.isStringLengthInRange(val, 1, 40)
     );
   });
@@ -51,7 +51,7 @@ exports.initValidation = function () {
   validation.registerTest("UserTests", "numeroTelephone", (val) => {
     return (
       objectUtils.isObjectString(val) &&
-      val.test(onlyDigitsFormat) &&
+      val.match(onlyDigitsFormat) != null &&
       objectUtils.isStringLengthInRange(
         val,
         USER_PHONENBR_MIN_LENGTH,
@@ -64,7 +64,7 @@ exports.initValidation = function () {
   validation.registerTest("UserTests", "motDePasse", (val) => {
     return (
       objectUtils.isObjectString(val) &&
-      !val.test(specialCharactersFormat) &&
+      val.match(specialCharactersFormat) == null &&
       objectUtils.isStringLengthInRange(
         val,
         USER_PWD_MIN_LENGTH,
@@ -77,7 +77,7 @@ exports.initValidation = function () {
   validation.registerTest("UserTests", "nomUtilisateur", (val) => {
     return (
       objectUtils.isObjectString(val) &&
-      !val.test(specialCharactersFormat) &&
+      val.match(specialCharactersFormat) == null &&
       objectUtils.isStringLengthInRange(
         val,
         USER_USERNAME_MIN_LENGTH,
