@@ -7,6 +7,8 @@ const mediaUtils = require("./../utils/mediaUtils");
 const fileUtils = require("./../utils/fileUtils");
 const { v1: uuidv1, v4: uuidv4 } = require("uuid");
 
+const validation = require("../validation/validation");
+
 //Librairies
 
 const mimetypes = require("mime-types");
@@ -194,7 +196,7 @@ exports.getConvos = async function (req, res) {
     contenu : <Contenu du message>
     cibleUserId : <Id de l'utilisateur ciblé>
   }
-  - medias : les medias, qui doivent ensuite être visible dans req.files
+  - medias : <les medias, qui doivent ensuite être visible dans req.files>
 */
 exports.postMessage = async function (req, res) {
   try {
@@ -221,7 +223,8 @@ exports.postMessage = async function (req, res) {
         "cibleUserId",
       ]) ||
       !objectUtils.isObjectValidStringId(data.cibleUserId) ||
-      !objectUtils.isObjectString(data.contenu)
+      !objectUtils.isObjectString(data.contenu) ||
+      !validation.useTest("ChatTests", "messageContent", data.contenu)
     )
       return res.status(400).json("Bad Request");
 
@@ -342,6 +345,7 @@ exports.updateMessage = async function (req, res) {
       !"newContent" in req.body ||
       !req.body.newContent ||
       !objectUtils.isObjectString(req.body.newContent) ||
+      !validation.useTest("ChatTests", "messageContent", req.body.newContent) ||
       !objectUtils.containsOnlyGivenArrayElementsAsProperties(req.body, [
         "newContent",
       ])

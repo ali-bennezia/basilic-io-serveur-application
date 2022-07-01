@@ -21,6 +21,7 @@ exports.follow = async function (req, res) {
     //Sanitation des valeurs reçues.
     let md = parseInt(req.params.mode);
     if (
+      isNaN(md) ||
       (md != 0 && md != 1) ||
       !objectUtils.isObjectValidStringId(req.params.userIdB)
     )

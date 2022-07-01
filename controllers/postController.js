@@ -11,8 +11,11 @@ const mediaUtils = require("./../utils/mediaUtils");
 const userUtils = require("./../utils/userUtils");
 const fileUtils = require("./../utils/fileUtils");
 const followUtils = require("./../utils/followUtils");
+
 const { default: mongoose } = require("mongoose");
 const { v1: uuidv1, v4: uuidv4 } = require("uuid");
+
+const validation = require("./../validation/validation");
 
 //API
 
@@ -75,7 +78,11 @@ exports.getPost = async function (req, res) {
 */
 exports.createPost = async function (req, res) {
   try {
-    if (!"contenu" in req.body || !req.body.contenu)
+    if (
+      !"contenu" in req.body ||
+      !req.body.contenu ||
+      !validation.useTest("PostTests", "postContent", req.body.contenu)
+    )
       return res.status(400).json("Bad Request");
 
     if ("files" in req)
@@ -165,7 +172,8 @@ exports.editPost = async function (req, res) {
         "contenu",
       ]) ||
       !"contenu" in req.body ||
-      !objectUtils.isObjectString(req.body.contenu)
+      !objectUtils.isObjectString(req.body.contenu) ||
+      !validation.useTest("PostTests", "postContent", req.body.contenu)
     )
       return res.status(400).json("Bad Request");
 

@@ -20,6 +20,19 @@
           "max": 15
         }
       }
+    },
+
+    "message": {
+      "length": {
+        "min": 3,
+        "max": 280
+      }
+    },
+    "post": {
+      "length": {
+        "min": 3,
+        "max": 320
+      }
     }
   }
 }
