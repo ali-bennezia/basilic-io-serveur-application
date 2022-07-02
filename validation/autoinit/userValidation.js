@@ -31,13 +31,49 @@ const USER_PHONENBR_MAX_LENGTH = config.get(
 const USER_EMAIL_MIN_LENGTH = config.get("validation.user.email.length.min");
 const USER_EMAIL_MAX_LENGTH = config.get("validation.user.email.length.max");
 
+const USER_PUBLICNAME_MAX_LENGTH = config.get(
+  "validation.user.params.nomPublic.length.max"
+);
+
+const USER_DESCRIPTION_MAX_LENGTH = config.get(
+  "validation.user.params.descriptionProfil.length.max"
+);
+
 const specialCharactersFormat = /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~\s]/;
+const specialCharactersFormatDontCheckSpaces =
+  /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
+const trueOrFalseFormat = /^(true|false)$/;
+
 const onlyDigitsFormat = /^[0-9]+$/;
 const onlyCapitalCharsOrDigitsFormat = /^[A-Z0-9]+$/;
 
 //Implémentation.
 
 exports.initValidation = function () {
+  //Test profilPublic
+  validation.registerTest("UserTests", "profilPublic", (val) => {
+    return (
+      objectUtils.isObjectString(val) && val.match(trueOrFalseFormat) != null
+    );
+  });
+
+  //Test nomPublic
+  validation.registerTest("UserTests", "nomPublic", (val) => {
+    return (
+      objectUtils.isObjectString(val) &&
+      objectUtils.isStringLengthInRange(val, 0, USER_PUBLICNAME_MAX_LENGTH) &&
+      val.match(specialCharactersFormatDontCheckSpaces) == null
+    );
+  });
+
+  //Test descriptionProfil
+  validation.registerTest("UserTests", "descriptionProfil", (val) => {
+    return (
+      objectUtils.isObjectString(val) &&
+      objectUtils.isStringLengthInRange(val, 0, USER_DESCRIPTION_MAX_LENGTH)
+    );
+  });
+
   //Test codeValidation
   validation.registerTest("UserTests", "code", (val) => {
     return (

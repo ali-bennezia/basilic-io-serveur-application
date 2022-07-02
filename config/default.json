@@ -19,6 +19,14 @@
           "min": 4,
           "max": 15
         }
+      },
+      "params": {
+        "nomPublic": {
+          "length": { "max": 40 }
+        },
+        "descriptionProfil": {
+          "length": { "max": 450 }
+        }
       }
     },
 

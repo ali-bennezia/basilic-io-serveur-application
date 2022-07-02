@@ -10,6 +10,8 @@ const userUtils = require("../utils/userUtils");
 const fileUtils = require("../utils/fileUtils");
 const mediaUtils = require("../utils/mediaUtils");
 
+const validation = require("../validation/validation");
+
 //Modèles.
 
 const userModel = require("../models/utilisateurModel");
@@ -34,7 +36,7 @@ const updatableParamMediaProperties = ["photoProfil", "banniereProfil"];
   Le client doit justifier d'un token authentique.
   Dans le corp de la requête doit se trouver un objet extrait du form-data qui doit être la forme:
   {
-    newData : {
+    newParams : {
       <Propriétés à mettre à jour et leurs nouvelles valeurs>
     }
   }
@@ -59,13 +61,8 @@ exports.patchParams = async function (req, res) {
           : null
         : null;
 
-    let newParams = null;
-    try {
-      newParams =
-        "newParams" in req.body ? JSON.parse(req.body.newParams) : null;
-    } catch (err) {
-      newParams = null;
-    }
+    let newParams = "newParams" in req.body ? req.body.newParams : null;
+
     if (
       !"id" in req.params ||
       !req.params.id ||
@@ -76,11 +73,27 @@ exports.patchParams = async function (req, res) {
       !objectUtils.containsOnlyGivenArrayElementsAsProperties(
         newParams,
         updatableParamProperties
-      )
+      ) ||
+      ("profilPublic" in newParams &&
+        !validation.useTest(
+          "UserTests",
+          "profilPublic",
+          newParams.profilPublic
+        )) ||
+      ("nomPublic" in newParams &&
+        !validation.useTest("UserTests", "nomPublic", newParams.nomPublic)) ||
+      ("descriptionProfil" in newParams &&
+        !validation.useTest(
+          "UserTests",
+          "descriptionProfil",
+          newParams.descriptionProfil
+        ))
     )
       return res.status(400).json("Bad Request");
     if (user._id.toString() != tokenUser._id.toString())
       return res.status(403).json("Forbidden");
+
+    //Validation des paramètres.
 
     //On vérifie les fichiers.
     let allFieldNames = "files" in req ? req.files.map((e) => e.fieldname) : [];
@@ -92,7 +105,6 @@ exports.patchParams = async function (req, res) {
         )
       )
         return res.status(400).json("Bad Request");
-
       for (let f of req.files)
         if (!fileUtils.validateFile(f.size, f.mimetype))
           return res.status(400).json("Bad Request");
@@ -101,7 +113,6 @@ exports.patchParams = async function (req, res) {
     //On vérifie qu'on ne nous envoie pas à la fois un fichier pour un paramètre et à la fois un paramètre dans l'objet newParams.
     for (let fn of allFieldNames)
       if (fn in newParams) return res.status(400).json("Bad Request");
-
     //On vérifie qu'il n'y a pas de dupliqués.
     if (allFieldNames.length != new Set(allFieldNames).size)
       return res.status(400).json("Bad Request");
