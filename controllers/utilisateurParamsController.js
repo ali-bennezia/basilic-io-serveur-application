@@ -165,7 +165,8 @@ exports.patchParams = async function (req, res) {
     let awaitingSuppressionMediaIds = awaitingSuppressionMediaParamFields.map(
       (rmMediaField) => userParams[rmMediaField].toString()
     );
-    mediaUtils.removeMediasByIds(...awaitingSuppressionMediaIds);
+    if (awaitingSuppressionMediaIds.length > 0)
+      mediaUtils.removeMediasByIds(...awaitingSuppressionMediaIds);
 
     for (let f of awaitingSuppressionMediaParamFields) delete newParams[f];
 
