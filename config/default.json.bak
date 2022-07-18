@@ -7,7 +7,7 @@
           "max": 65
         }
       },
-      "nomUtilisateur": { "length": { "min": 3, "max": 22 } },
+      "nomUtilisateur": { "length": { "min": 3, "max": 14 } },
       "pwd": {
         "length": {
           "min": 6,
