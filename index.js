@@ -23,6 +23,12 @@ app.use(express.json());
 //Pour la gestion des requêtes application/xwww-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
 
+//Configuration CORS
+app.all("*", function (req, res, next) {
+  res.set("Access-Control-Allow-Origin: *");
+  next();
+});
+
 //Routage.
 
 app.use("/api/auth", require("./routers/authRouter"));
