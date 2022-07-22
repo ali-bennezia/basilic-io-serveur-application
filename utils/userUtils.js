@@ -38,6 +38,24 @@ exports.addUser = async (user) => {
   return { user: newUser, params: newUserParams };
 };
 
+exports.doesUserWithEmailExists = async (email) => {
+  if (email == null || !objectUtils.isObjectString(email)) return false;
+  return (await userModel.model.exists({ email: email })) != null;
+};
+
+exports.doesUserWithUsernameExists = async (username) => {
+  if (username == null || !objectUtils.isObjectString(username)) return false;
+  return (await userModel.model.exists({ nomUtilisateur: username })) != null;
+};
+
+exports.doesUserWithPhoneNumberExists = async (phoneNumber) => {
+  if (phoneNumber == null || !objectUtils.isObjectString(phoneNumber))
+    return false;
+  return (
+    (await userModel.model.exists({ numeroTelephone: phoneNumber })) != null
+  );
+};
+
 exports.getUserFromId = async (id) => {
   if (!objectUtils.isObjectValidStringId(id))
     throw "L'identifiant envoyé est incorrect.";

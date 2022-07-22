@@ -48,6 +48,16 @@ exports.registerUser = async function (req, res) {
       )
     )
       return res.status(400).json("Bad Request");
+
+    if (
+      (await userUtils.doesUserWithEmailExists(req.body.email)) ||
+      (await userUtils.doesUserWithPhoneNumberExists(
+        req.body.numeroTelephone
+      )) ||
+      (await userUtils.doesUserWithUsernameExists(req.body.username))
+    )
+      return res.status(400).json("Non-Unique User Data");
+
     await userUtils.addUser(req.body);
     res.status(201).json("Created");
   } catch (err) {
@@ -69,6 +79,13 @@ exports.signinUser = async function (req, res) {
       res.status(400).json("Bad Request");
       return;
     }
+
+    let rememberMe =
+      "seSouvenirDeMoi" in req.body &&
+      (req.body.seSouvenirDeMoi == "true" ||
+        req.body.seSouvenirDeMoi == "false")
+        ? req.body.seSouvenirDeMoi
+        : false;
 
     if (
       ("nomUtilisateur" in identifier &&
@@ -95,7 +112,9 @@ exports.signinUser = async function (req, res) {
       return;
     }
 
-    let sessionData = await authUtils.generateUserSession(user);
+    let sessionData = await authUtils.generateUserSession(user, {
+      rememberMe: rememberMe,
+    });
     res.status(200).json(sessionData);
   } catch (err) {
     console.log(err);

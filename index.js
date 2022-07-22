@@ -25,7 +25,12 @@ app.use(express.urlencoded({ extended: true }));
 
 //Configuration CORS
 app.all("*", function (req, res, next) {
-  res.set("Access-Control-Allow-Origin: *");
+  res.set("Access-Control-Allow-Origin", "*");
+  res.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE");
+  res.set(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Requested-With"
+  );
   next();
 });
 
