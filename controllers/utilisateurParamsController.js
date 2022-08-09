@@ -47,6 +47,8 @@ exports.patchParams = async function (req, res) {
     let payload = req.tokenPayload;
     let tokenUser = await userUtils.getUserFromId(payload.userId);
 
+    console.log(req.body);
+
     let user =
       "id" in req.params
         ? req.params.id
@@ -62,6 +64,14 @@ exports.patchParams = async function (req, res) {
         : null;
 
     let newParams = "newParams" in req.body ? req.body.newParams : null;
+
+    if (objectUtils.isObjectString(newParams))
+      try {
+        newParams = JSON.parse(newParams);
+      } catch (e) {
+        console.log(e);
+        return res.status(500).json("Internal Server Error");
+      }
 
     if (
       !"id" in req.params ||
