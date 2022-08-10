@@ -47,8 +47,6 @@ exports.patchParams = async function (req, res) {
     let payload = req.tokenPayload;
     let tokenUser = await userUtils.getUserFromId(payload.userId);
 
-    console.log(req.body);
-
     let user =
       "id" in req.params
         ? req.params.id
@@ -189,11 +187,20 @@ exports.patchParams = async function (req, res) {
       ...newMedias,
     };
 
-    userParams = await paramsUtilisateurModel.findByIdAndUpdate(
-      { _id: userParams._id.toString() },
-      userParams,
-      { new: true }
-    );
+    userParams = await paramsUtilisateurModel
+      .findByIdAndUpdate({ _id: userParams._id.toString() }, userParams, {
+        new: true,
+      })
+      .lean();
+
+    //Envoi des liens.
+    for (let p in userParams)
+      if (updatableParamMediaProperties.includes(p)) {
+        console.log(p);
+        userParams[p] = await mediaUtils.getMediaLinkFromId(
+          userParams[p].toString()
+        );
+      }
 
     return res.status(200).json(userParams);
   } catch (err) {

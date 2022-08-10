@@ -49,7 +49,7 @@ app.use("/api/follows", require("./routers/followRouter"));
 mongoose
   .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
-    console.log("Connection à la base de donnée établie avec succès.");
+    console.log("Connexion à la base de donnée établie avec succès.");
 
     app.listen(LISTEN_PORT, () => {
       console.log(

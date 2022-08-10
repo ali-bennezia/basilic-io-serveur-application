@@ -53,7 +53,9 @@ exports.initValidation = function () {
   //Test profilPublic
   validation.registerTest("UserTests", "profilPublic", (val) => {
     return (
-      objectUtils.isObjectString(val) && val.match(trueOrFalseFormat) != null
+      val === true ||
+      val === false ||
+      (objectUtils.isObjectString(val) && val.match(trueOrFalseFormat) != null)
     );
   });
 
