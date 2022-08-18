@@ -7,7 +7,31 @@ const userModel = require("./../models/utilisateurModel");
 
 //Implémentations.
 
-//TODO
+//Combien de personnes est-ce que l'utilisateur suit ?
+exports.userFollowsCount = async (userId) => {
+  //Sanitation des valeurs reçues.
+  if (!objectUtils.isObjectValidStringId(userId))
+    throw "Argument(s) invalide(s).";
+
+  //Validation des valeurs reçues.
+  if (!(await userModel.model.exists({ _id: userId })))
+    throw "L'identifiant ne correspond pas à un utilisateur.";
+
+  return await followModel.count({ auteur: userId });
+};
+
+//Par combien de personnes l'utilisateur est-il suivi ?
+exports.userFollowingCount = async (userId) => {
+  //Sanitation des valeurs reçues.
+  if (!objectUtils.isObjectValidStringId(userId))
+    throw "Argument(s) invalide(s).";
+
+  //Validation des valeurs reçues.
+  if (!(await userModel.model.exists({ _id: userId })))
+    throw "L'identifiant ne correspond pas à un utilisateur.";
+
+  return await followModel.count({ cible: userId });
+};
 
 //Est-ce que userA suit userB ?
 exports.userIdFollows = async (userIdA, userIdB) =>

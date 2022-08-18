@@ -32,6 +32,7 @@ exports.checkTokenAuthenticity = async function (req, res, next) {
     await extractTokenAndPayload(req);
     next();
   } catch (err) {
+    console.log("ERROR: " + err);
     res.status(401).json("Invalid Token");
   }
 };

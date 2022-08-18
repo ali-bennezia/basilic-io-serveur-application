@@ -71,7 +71,7 @@ exports.getUserParamsFromUserId = async (id) => {
     throw "L'identifiant envoyé est incorrect.";
   if (!(await userParamsModel.exists({ utilisateur: id })))
     throw "Les paramètres n'existent pas.";
-  let params = await userParamsModel.findOne({ utilisateur: id });
+  let params = await userParamsModel.findOne({ utilisateur: id }).lean();
   return params;
 };
 

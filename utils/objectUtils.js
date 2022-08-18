@@ -9,6 +9,7 @@ const mongoose = require("mongoose");
 //Utilitaires
 
 const mediaUtils = require("./../utils/mediaUtils");
+const followUtils = require("./../utils/followUtils");
 
 //Implémentations
 
@@ -175,7 +176,12 @@ exports.isStringTimestamp = (object) =>
 
 //Extraire les informations sommaire de profil d'un utilisateur à partir de son document et celui de ses paramètres.
 exports.getUserSummaryProfileData = async (user, userParams) => {
-  let profileData = { id: user._id, nomUtilisateur: user.nomUtilisateur };
+  let profileData = {
+    id: user._id,
+    nomUtilisateur: user.nomUtilisateur,
+    suis: await followUtils.userFollowingCount(user._id.toString()),
+    suiviPar: await followUtils.userFollowsCount(user._id.toString()),
+  };
   if ("nomPublic" in userParams && userParams.nomPublic)
     profileData.nomPublic = userParams.nomPublic;
   if ("profilPublic" in userParams && userParams.profilPublic)

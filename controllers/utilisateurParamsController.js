@@ -89,8 +89,10 @@ exports.patchParams = async function (req, res) {
           newParams.profilPublic
         )) ||
       ("nomPublic" in newParams &&
+        newParams.nomPublic !== null &&
         !validation.useTest("UserTests", "nomPublic", newParams.nomPublic)) ||
       ("descriptionProfil" in newParams &&
+        newParams.descriptionProfil !== null &&
         !validation.useTest(
           "UserTests",
           "descriptionProfil",
@@ -162,6 +164,7 @@ exports.patchParams = async function (req, res) {
       }
     }
 
+    //Conversion des identifiants de médias par leurs équivalents en chaînes de charactères.
     for (const prop in newMedias) {
       newMedias[prop] = newMedias[prop]._id.toString();
     }
@@ -180,23 +183,39 @@ exports.patchParams = async function (req, res) {
 
     //Envoi des nouveaux paramètres.
     userParams = {
-      ...objectUtils.overwriteAndAddObjectProperties(
-        userParams._doc,
-        newParams
-      ),
+      ...objectUtils.overwriteAndAddObjectProperties(userParams, newParams),
       ...newMedias,
     };
 
-    userParams = await paramsUtilisateurModel
-      .findByIdAndUpdate({ _id: userParams._id.toString() }, userParams, {
+    //Mémorisation des champs à supprimer.
+    let fieldsToDelete = [];
+    for (let p in userParams)
+      if (userParams[p] === null) {
+        fieldsToDelete.push(p);
+        userParams[p] = undefined;
+      }
+
+    //Mise à jour des paramètres sur la base de donnée.
+    userParams = await paramsUtilisateurModel.findByIdAndUpdate(
+      { _id: userParams._id.toString() },
+      userParams,
+      {
         new: true,
-      })
-      .lean();
+      }
+    );
+
+    //Suppression des champs.
+    for (let p in userParams)
+      if (fieldsToDelete.includes(p)) userParams[p] = undefined;
+    await userParams.save();
+    userParams = userParams._doc;
+    for (let p in userParams)
+      if (userParams[p] === undefined || userParams[p] === null)
+        delete userParams[p];
 
     //Envoi des liens.
     for (let p in userParams)
       if (updatableParamMediaProperties.includes(p)) {
-        console.log(p);
         userParams[p] = await mediaUtils.getMediaLinkFromId(
           userParams[p].toString()
         );
