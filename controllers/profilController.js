@@ -32,6 +32,17 @@ exports.getProfile = async function (req, res) {
           : null
         : null;
 
+    let tokenPayload = null;
+
+    if ("authorization" in req.headers && req.headers.authorization != null)
+      try {
+        tokenPayload = await authUtils.authentifySessionToken(
+          req.headers.authorization.replace("Bearer ", "")
+        );
+      } catch (err) {
+        tokenPayload = null;
+      }
+
     if (!"id" in req.params || !req.params.id || !user || !userParams)
       return res.status(400).json("Bad Request");
 
@@ -39,6 +50,21 @@ exports.getProfile = async function (req, res) {
       user,
       userParams
     );
+
+    if (tokenPayload != null)
+      profileData = {
+        ...profileData,
+        token: {
+          suisProfil: await followUtils.userIdFollows(
+            tokenPayload.userId,
+            user._id.toString()
+          ),
+          domaineVisible: await userUtils.doesUserIdHaveAccessToUserIdDomain(
+            tokenPayload.userId,
+            user._id.toString()
+          ),
+        },
+      };
 
     return res.status(200).json(profileData);
   } catch (err) {
