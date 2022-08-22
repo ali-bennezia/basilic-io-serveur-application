@@ -25,7 +25,7 @@
           "length": { "max": 40 }
         },
         "descriptionProfil": {
-          "length": { "max": 450 }
+          "length": { "max": 384 }
         }
       }
     },
