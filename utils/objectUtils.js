@@ -179,8 +179,8 @@ exports.getUserSummaryProfileData = async (user, userParams) => {
   let profileData = {
     id: user._id,
     nomUtilisateur: user.nomUtilisateur,
-    suis: await followUtils.userFollowingCount(user._id.toString()),
-    suiviPar: await followUtils.userFollowsCount(user._id.toString()),
+    suiviPar: await followUtils.userFollowingCount(user._id.toString()),
+    suis: await followUtils.userFollowsCount(user._id.toString()),
   };
   if ("nomPublic" in userParams && userParams.nomPublic)
     profileData.nomPublic = userParams.nomPublic;
