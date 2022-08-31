@@ -155,10 +155,14 @@ exports.sendValidation = async function (req, res) {
       codeValidation: validationCode,
     };
 
-    if (mode == 0) {
-      codeUtils.sendEmailCode(validationCode, user.email);
-    } else {
-      codeUtils.sendSMSCode(validationCode, user.numeroTelephone);
+    try {
+      if (mode == 0) {
+        codeUtils.sendEmailCode(validationCode, user.email);
+      } else {
+        codeUtils.sendSMSCode(validationCode, user.numeroTelephone);
+      }
+    } catch (err) {
+      return res.status(500).json("Internal Server Error");
     }
 
     await userModel.model.updateOne({ _id: user._id }, userDataUpdate);
