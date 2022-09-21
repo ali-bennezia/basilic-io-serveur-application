@@ -212,3 +212,33 @@ exports.getPostResponses = async (postId, amount = 1, timestamp = null) => {
 
   return result;
 };
+
+/*
+  Prend deux paramètres:
+    - postData: objet représentant les données du post
+    - userId: identifiant de l'utilisateur dont on veut ajouter les données d'avis sur l'objet postData
+
+  Ajoute deux informations sur l'objet représentant les données d'un post:
+    - likePar: booléenne, vraie si l'auteur aime le post
+    - dislikePar: booléenne, vraie si l'auteur n'aime pas le post
+  Seulement si l'auteur a laissé un avis sur le poste concerné. Sinon, aucune donnée n'est ajoutée.
+*/
+exports.populatePostUserIdActivityData = async (postData, userId) => {
+  //Sanitation des variables.
+  if (!objectUtils.isObjectValidStringId(userId)) throw "Arguments invalides.";
+
+  //Executions.
+
+  const avis = await avisUtils.getSingleAvisFromAuthorUserIdAndTargetPostId(
+    userId,
+    postData._id.toString()
+  );
+
+  if (avis == null) return postData;
+  else
+    return {
+      ...postData,
+      likePar: avis.nature === "like",
+      dislikePar: avis.nature === "dislike",
+    };
+};

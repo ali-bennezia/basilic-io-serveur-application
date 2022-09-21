@@ -356,9 +356,9 @@ exports.postActivity = async function (req, res) {
   try {
     //Sanitation des valeurs reçues.
     if (
-      !req.params.postId ||
+      !"postId" in req.params ||
       !objectUtils.isObjectValidStringId(req.params.postId) ||
-      !req.params.nature ||
+      !"nature" in req.params ||
       !avisUtils.getAdmissibleNatureValues().includes(req.params.nature)
     )
       return res.status(400).json("Bad Request");

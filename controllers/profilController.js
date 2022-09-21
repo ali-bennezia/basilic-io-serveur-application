@@ -101,6 +101,11 @@ exports.getProfilePosts = async function (req, res) {
     if (!user || !userParams) return res.status(404).json("Not Found");
 
     let public = "profilPublic" in userParams ? userParams.profilPublic : true;
+
+    const token = req.headers.authorization.replace("Bearer ", "") || null;
+    const payload = (await authUtils.authentifySessionToken(token)) || null;
+    const tokenUserId = payload.userId || null;
+
     if (!public) {
       if (
         !"headers" in req ||
@@ -109,8 +114,7 @@ exports.getProfilePosts = async function (req, res) {
         !req.headers.authorization
       )
         return res.status(401).json("Unauthorized");
-      let token = req.headers.authorization.replace("Bearer ", "");
-      let payload = await authUtils.authentifySessionToken(token);
+
       if (!payload || !"userId" in payload)
         return res.status(401).json("Unauthorized");
       if (
@@ -162,6 +166,15 @@ exports.getProfilePosts = async function (req, res) {
         };
       })
     );
+
+    if (tokenUserId != null)
+      posts = await Promise.all(
+        posts.map(
+          async (p) =>
+            await postUtils.populatePostUserIdActivityData(p, tokenUserId)
+        )
+      );
+
     return res.status(200).json(posts);
   } catch (err) {
     console.log(err);

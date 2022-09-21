@@ -37,7 +37,7 @@ exports.generateCode = () =>
 
 exports.sendEmailCode = async (code, recipientMail) => {
   let info = await transport.sendMail({
-    from: `"Basilic" ${process.env.EMAIL_USER}`,
+    from: `${process.env.EMAIL_USER}`,
     to: recipientMail,
     subject: "Basilic - Code de validation",
     text: `Un compte lié à votre adresse email sur notre réseau social Basilic.io est sur le point d'être validé. Utilisez le code ${code} afin de le valider. Si vous n'êtes pas propriétaire de ce compte, veuillez ignorer ce message.`,

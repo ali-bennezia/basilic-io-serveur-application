@@ -37,8 +37,6 @@ exports.schemaObject = {
   motDePasse: {
     type: String,
     required: true,
-    minlength: USER_PWD_MIN_LENGTH,
-    maxlength: USER_PWD_MAX_LENGTH,
   },
   email: {
     type: String,
