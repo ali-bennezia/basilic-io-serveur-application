@@ -258,6 +258,7 @@ exports.getPostResponses = async function (req, res) {
     let post = await postUtils.getPostFromId(req.params.postId);
     let domain = await postUtils.getPostProfileDomain(req.params.postId);
     let tokenPayload = req.tokenPayload;
+    const tokenUserId = tokenPayload.userId || null;
 
     if (
       !userUtils.doesUserIdHaveAccessToUserIdDomain(
@@ -279,6 +280,14 @@ exports.getPostResponses = async function (req, res) {
         medias: await mediaUtils.getMediaLinkArrayFromMediaIdArray(el.medias),
       });
     }
+
+    if (tokenUserId != null)
+      results = await Promise.all(
+        results.map(
+          async (p) =>
+            await postUtils.populatePostUserIdActivityData(p, tokenUserId)
+        )
+      );
 
     return res.status(200).json(results);
   } catch (err) {
