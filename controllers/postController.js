@@ -253,7 +253,6 @@ exports.getPostResponses = async function (req, res) {
     //Vérification de la validité des informations reçues.
     if (!(await postUtils.doesPostWithIdExist(req.params.postId)))
       return res.status(404).json("Not Found");
-
     //Vérification des droits d'accès.
     let post = await postUtils.getPostFromId(req.params.postId);
     let domain = await postUtils.getPostProfileDomain(req.params.postId);

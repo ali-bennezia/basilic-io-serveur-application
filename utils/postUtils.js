@@ -126,6 +126,7 @@ exports.getPostFromId = async (postId) => {
   - Le nombre de dislikes
   - Le nombre de réponses
   - Les informations sommaires du profil de l'auteur
+  - L'identifiant du profil de l'auteur du post ciblé si il y a
 */
 exports.getPostSecondaryData = async (postId) => {
   if (!objectUtils.isObjectValidStringId(postId)) throw "Argument invalide.";
@@ -134,6 +135,17 @@ exports.getPostSecondaryData = async (postId) => {
   let posterProfile = await userUtils.getUserAndUserParamsFromUserId(
     (await this.getPostFromId(postId.toString())).auteur.toString()
   );
+
+  let targetedPostData = {};
+  const post = await this.getPostFromId(postId.toString());
+  if (post != null && "postCible" in post) {
+    let targetPost = await this.getPostFromId(post.postCible.toString());
+    let tpAuthorIdentifier = (
+      await userUtils.getUserFromId(targetPost.auteur.toString())
+    ).nomUtilisateur;
+    targetedPostData = { nomUtilisateurCible: tpAuthorIdentifier };
+  }
+
   return {
     ...(await avisUtils.getPostAvis(postId)),
     auteur: await objectUtils.getUserSummaryProfileData(
@@ -141,6 +153,7 @@ exports.getPostSecondaryData = async (postId) => {
       posterProfile.params
     ),
     reponse: await postModel.count({ postCible: postId }),
+    ...targetedPostData,
   };
 };
 
@@ -179,7 +192,6 @@ exports.updatePost = async (postId, contenu) => {
     { contenu: contenu },
     { new: true }
   );
-  console.log(post);
   return post;
 };
 

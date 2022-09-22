@@ -146,7 +146,6 @@ exports.getUserConversations = async (userId, amount, timestamp = null) => {
       let userAndParamsB = await userUtils.getUserAndUserParamsFromUserId(
         c.userIdB.toString()
       );
-      console.log("A");
       return {
         userA: await objectUtils.getUserSummaryProfileData(
           userAndParamsA.user,
@@ -172,7 +171,6 @@ exports.getUserConversations = async (userId, amount, timestamp = null) => {
       };
     })
   );
-  console.log("B");
   return convos;
 };
 
@@ -215,7 +213,6 @@ exports.removeMessage = async (msgId) => {
 
   if ((await convoModel.exists(convoSearchFilter)) != null) {
     let convo = await convoModel.findOne(convoSearchFilter);
-    console.log(convo);
     if (parseInt(convo.nbMessages) <= 1)
       await convoModel.findByIdAndDelete(convo._id);
     else {
