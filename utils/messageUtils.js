@@ -109,6 +109,29 @@ exports.unregisterConversation = async (userIdA, userIdB) => {
 };
 
 /*
+  Obtenir le tout dernier message d'une conversation.
+  */
+exports.getConversationMostRecentMessage = async (userIdA, userIdB) => {
+  if (
+    !objectUtils.isObjectValidStringId(userIdA) ||
+    !objectUtils.isObjectValidStringId(userIdB)
+  )
+    throw "Argument(s) invalide(s).";
+
+  let msg = await messageModel
+    .findOne({
+      $or: [
+        { userIdA: userIdA, userIdB: userIdB },
+        { userIdA: userIdB, userIdB: userIdA },
+      ],
+    })
+    .sort({ createdAt: -1 })
+    .exec();
+
+  return msg;
+};
+
+/*
   Obtenir la liste des conversations d'un utilisateur
 */
 exports.getUserConversations = async (userId, amount, timestamp = null) => {
@@ -146,6 +169,10 @@ exports.getUserConversations = async (userId, amount, timestamp = null) => {
       let userAndParamsB = await userUtils.getUserAndUserParamsFromUserId(
         c.userIdB.toString()
       );
+      let latestMsg = await this.getConversationMostRecentMessage(
+        c.userIdA.toString(),
+        c.userIdB.toString()
+      );
       return {
         userA: await objectUtils.getUserSummaryProfileData(
           userAndParamsA.user,
@@ -168,6 +195,10 @@ exports.getUserConversations = async (userId, amount, timestamp = null) => {
           cible: c.userIdB,
           cibleVu: false,
         }),
+
+        ...(latestMsg != null
+          ? { lastSentMessageAt: latestMsg.createdAt }
+          : {}),
       };
     })
   );

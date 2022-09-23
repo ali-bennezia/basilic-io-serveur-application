@@ -196,12 +196,11 @@ exports.getConvos = async function (req, res) {
     contenu : <Contenu du message>
     cibleUserId : <Id de l'utilisateur ciblé>
   }
-  - medias : <les medias, qui doivent ensuite être visible dans req.files>
+  - medias : <les medias, qui doivent ensuite êtres visibles dans req.files>
 */
 exports.postMessage = async function (req, res) {
   try {
     //Sanitation des valeurs reçues.
-
     let data = null;
     if ("data" in req.body && req.body.data)
       try {
@@ -267,7 +266,7 @@ exports.postMessage = async function (req, res) {
       }
 
     let mediaLinks = msgMedias.map((el) => el.lien);
-    let mediaIds = msgMedias.map((el) => el._id);
+    let mediaIds = msgMedias.map((el) => el._id.toString());
 
     let newMsg = await msgUtils.createMessage(
       clientUserId,
