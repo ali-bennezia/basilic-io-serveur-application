@@ -121,8 +121,8 @@ exports.getConversationMostRecentMessage = async (userIdA, userIdB) => {
   let msg = await messageModel
     .findOne({
       $or: [
-        { userIdA: userIdA, userIdB: userIdB },
-        { userIdA: userIdB, userIdB: userIdA },
+        { auteur: userIdA, cible: userIdB },
+        { auteur: userIdB, cible: userIdA },
       ],
     })
     .sort({ createdAt: -1 })
@@ -197,7 +197,10 @@ exports.getUserConversations = async (userId, amount, timestamp = null) => {
         }),
 
         ...(latestMsg != null
-          ? { lastSentMessageAt: latestMsg.createdAt, lastSentMessage: cryptr.decrypt(latestMsg.contenu) }
+          ? {
+              lastSentMessageAt: latestMsg.createdAt,
+              lastSentMessage: cryptr.decrypt(latestMsg.contenu),
+            }
           : {}),
       };
     })
