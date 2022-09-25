@@ -197,7 +197,7 @@ exports.getUserConversations = async (userId, amount, timestamp = null) => {
         }),
 
         ...(latestMsg != null
-          ? { lastSentMessageAt: latestMsg.createdAt }
+          ? { lastSentMessageAt: latestMsg.createdAt, lastSentMessage: cryptr.decrypt(latestMsg.contenu) }
           : {}),
       };
     })
