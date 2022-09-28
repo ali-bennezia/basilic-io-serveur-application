@@ -37,7 +37,10 @@ exports.getMedia = async function (id) {
 
 exports.checkUserMediaAccessByUserId = async function (mediaLink, userId) {
   let media = await this.getMediaByLink(mediaLink);
-  let strDroitsVisible = media.droitsVisible.map((id) => id.toString());
+  let strDroitsVisible =
+    media == undefined || media == null || !"droitsVisible" in media
+      ? []
+      : media.droitsVisible.map((id) => id.toString());
   return (
     media &&
     (!"mediaPublic" in media ||

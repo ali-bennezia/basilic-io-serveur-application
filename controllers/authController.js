@@ -66,7 +66,7 @@ exports.authentifyToken = async function (req, res) {
     if (!payload) return res.status(200).json(authData);
     let user = payload
       ? payload.userId
-        ? userUtils.getUserFromId(payload.userId)
+        ? await userUtils.getUserFromId(payload.userId)
         : null
       : null;
 
