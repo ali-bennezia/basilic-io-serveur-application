@@ -79,6 +79,7 @@ exports.registerConversation = async (userIdA, userIdB, initialAmount = 1) => {
     userIdA: userIdA,
     userIdB: userIdB,
     nbMessages: amnt,
+    latestMessageAt: new Date(),
   });
 };
 
@@ -151,14 +152,14 @@ exports.getUserConversations = async (userId, amount, timestamp = null) => {
 
   //Execution.
   let optionalTimestampFilter =
-    timestamp != null ? { createdAt: { $lte: timestamp } } : {};
+    timestamp != null ? { latestMessageAt: { $lte: timestamp } } : {};
 
   let rawConvos = await convoModel
     .find({
       $or: [{ userIdA: userId }, { userIdB: userId }],
       ...optionalTimestampFilter,
     })
-    .sort({ createdAt: -1 })
+    .sort({ latestMessageAt: -1 })
     .limit(amnt)
     .exec();
   let convos = await Promise.all(
@@ -174,6 +175,7 @@ exports.getUserConversations = async (userId, amount, timestamp = null) => {
         c.userIdB.toString()
       );
       return {
+        id: c._id.toString(),
         userA: await objectUtils.getUserSummaryProfileData(
           userAndParamsA.user,
           userAndParamsA.params
@@ -196,9 +198,10 @@ exports.getUserConversations = async (userId, amount, timestamp = null) => {
           cibleVu: false,
         }),
 
+        lastSentMessageAt: c.latestMessageAt,
+
         ...(latestMsg != null
           ? {
-              lastSentMessageAt: latestMsg.createdAt,
               lastSentMessage: cryptr.decrypt(latestMsg.contenu),
             }
           : {}),
@@ -318,6 +321,7 @@ exports.createMessage = async (
             { auteur: receiverUserId, cible: senderUserId },
           ],
         }),
+        latestMessageAt: new Date(),
       }
     );
   }

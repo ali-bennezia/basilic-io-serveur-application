@@ -13,6 +13,7 @@ const schema = new mongoose.Schema({
   },
 
   nbMessages: { type: Number, required: true, min: 0, default: 0 },
+  latestMessageAt: { type: Date, required: true },
 });
 
 module.exports = mongoose.model("Conversation", schema);
