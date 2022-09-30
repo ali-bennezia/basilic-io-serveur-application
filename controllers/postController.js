@@ -446,7 +446,6 @@ exports.deleteActivity = async function (req, res) {
   }
 };
 
-//TODO
 //GET /api/posts/flux/public/get/:amount
 exports.getPostFlux = async function (req, res) {
   try {
@@ -460,25 +459,25 @@ exports.getPostFlux = async function (req, res) {
     )
       return res.status(400).json("Bad Request");
 
-    //Vérification des droits d'accès.
-    let tokenPayload = req.tokenPayload;
-    const tokenUserId = tokenPayload.userId || null;
+    //Vérification des droits d'accès et de l'existence de l'utilisateur.
+    let tokenPayload = req.tokenPayload || null;
+    let tokenUserId =
+      tokenPayload != null && "userId" in tokenPayload
+        ? tokenPayload.userId
+        : null;
+    let isAdmin = false;
 
-    /*let post = await postUtils.getPostFromId(req.params.postId);
-    let domain = await postUtils.getPostProfileDomain(req.params.postId);
-
-
-    if (
-      !userUtils.doesUserIdHaveAccessToUserIdDomain(
-        tokenPayload.userId,
-        domain.user._id.toString()
-      )
-    )
-      return res.status(403).json("Forbidden");*/
+    const user =
+      tokenUserId != null ? await userUtils.getUserFromId(tokenUserId) : null;
+    if (!user) tokenUserId = null;
+    else isAdmin = userUtils.isUserIdAdmin(tokenUserId);
 
     //Execution.
 
-    let resps = await postUtils.getPostResponses(req.params.postId, amnt);
+    let resps = await postUtils.getPostFlux(amnt, tokenUserId, isAdmin);
+
+    //Traitement des résultats pour le front-end.
+
     let results = [];
 
     for (let el of resps) {
@@ -497,6 +496,7 @@ exports.getPostFlux = async function (req, res) {
         )
       );
 
+    //Envoi.
     return res.status(200).json(results);
   } catch (err) {
     console.log(err);
@@ -504,13 +504,12 @@ exports.getPostFlux = async function (req, res) {
   }
 };
 
-//GET /api/posts/flux/public/get/:postId&:amount&:timestamp
-exports.getPostResponsesWithTimestamp = async function (req, res) {
+//GET /api/posts/flux/public/get/:amount&:timestamp
+exports.getPostFluxWithTimestamp = async function (req, res) {
   try {
     //Sanitation des informations reçues.
     let amnt = parseInt(req.params.amount);
     if (
-      !objectUtils.isObjectValidStringId(req.params.postId) ||
       isNaN(amnt) ||
       amnt <= 0 ||
       amnt >
@@ -521,30 +520,30 @@ exports.getPostResponsesWithTimestamp = async function (req, res) {
     )
       return res.status(400).json("Bad Request");
 
-    //Vérification de la validité des informations reçues.
-    if (!(await postUtils.doesPostWithIdExist(req.params.postId)))
-      return res.status(404).json("Not Found");
+    //Vérification des droits d'accès et de l'existence de l'utilisateur.
+    let tokenPayload = req.tokenPayload || null;
+    let tokenUserId =
+      tokenPayload != null && "userId" in tokenPayload
+        ? tokenPayload.userId
+        : null;
+    let isAdmin = false;
 
-    //Vérification des droits d'accès.
-    let post = await postUtils.getPostFromId(req.params.postId);
-    let domain = await postUtils.getPostProfileDomain(req.params.postId);
-    let tokenPayload = req.tokenPayload;
-
-    if (
-      !userUtils.doesUserIdHaveAccessToUserIdDomain(
-        tokenPayload.userId,
-        domain.user._id.toString()
-      )
-    )
-      return res.status(403).json("Forbidden");
+    const user =
+      tokenUserId != null ? await userUtils.getUserFromId(tokenUserId) : null;
+    if (!user) tokenUserId = null;
+    else isAdmin = userUtils.isUserIdAdmin(tokenUserId);
 
     //Execution.
 
-    let resps = await postUtils.getPostResponses(
-      req.params.postId,
+    let resps = await postUtils.getPostFlux(
       amnt,
+      tokenUserId,
+      isAdmin,
       req.params.timestamp
     );
+
+    //Traitement des résultats pour le front-end.
+
     let results = [];
 
     for (let el of resps) {
@@ -555,6 +554,15 @@ exports.getPostResponsesWithTimestamp = async function (req, res) {
       });
     }
 
+    if (tokenUserId != null)
+      results = await Promise.all(
+        results.map(
+          async (p) =>
+            await postUtils.populatePostUserIdActivityData(p, tokenUserId)
+        )
+      );
+
+    //Envoi.
     return res.status(200).json(results);
   } catch (err) {
     console.log(err);

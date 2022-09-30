@@ -230,9 +230,15 @@ exports.getPostResponses = async (postId, amount = 1, timestamp = null) => {
   Récupères un liste de posts publics recemment publiés.
     - amount: le nombre de réponses maximal à récuperer
     - userId: l'identifiant de l'utilisateur voulant récuperer le flux
+    - isUserAdmin: booléenne, indiquant si l'utilisateur est admin et à donc accès a tous les domaines ou non
     - timestamp: un instant précis. toute réponse datante de cet instant ou avant seront récupérées
 */
-exports.getPostFlux = async (amount = 1, userId = null, timestamp = null) => {
+exports.getPostFlux = async (
+  amount = 1,
+  userId = null,
+  isUserAdmin = false,
+  timestamp = null
+) => {
   //Sanitation des variables.
   amount = parseInt(amount);
   if (
@@ -247,11 +253,72 @@ exports.getPostFlux = async (amount = 1, userId = null, timestamp = null) => {
     ? { createdAt: { $lte: timestamp } }
     : {};
 
-  let result = await postModel
-    .find({ postCible: postId, ...optionalTimestampFilter })
-    .sort({ createdAt: -1 })
-    .limit(amount)
-    .exec();
+  let result = [];
+
+  if (!isUserAdmin) {
+    //Execution d'une recherche en aggrégation pour tout post dont le domaine est accessible par l'utilisateur (userId).
+    //Sinon, tout post public, si aucun utilisateur n'est fourni.
+
+    let filtreDomaine = [
+      //On prend, si le post est public.
+      {
+        $or: [
+          { "params_auteur.profilPublic": { $exists: false } },
+          { "params_auteur.profilPublic": true },
+        ],
+      },
+      //Sinon, si l'utilisateur n'est pas anonyme, on prend le post si l'utilisateur a accès au domaine
+      userId != null
+        ? {
+            "doc_auteur.suivisPar": userId,
+          }
+        : {},
+    ];
+    if (userId == null) filtreDomaine.pop();
+
+    result = await postModel.aggregate([
+      //Filtrage optionnel date post.
+      {
+        $match: { ...optionalTimestampFilter },
+      },
+      //Jointure gauche avec les données et paramètres de l'auteur du post.
+      {
+        $lookup: {
+          from: "utilisateurs",
+          localField: "auteur",
+          foreignField: "_id",
+          as: "doc_auteur",
+        },
+      },
+      {
+        $lookup: {
+          from: "paramsutilisateurs",
+          localField: "auteur",
+          foreignField: "utilisateur",
+          as: "params_auteur",
+        },
+      },
+
+      //Filtrage, selon le domaine du post et userId.
+      {
+        $match: {
+          $or: filtreDomaine,
+        },
+      },
+      //On limite la quantité de posts, et on les organise du plus récent au plus ancien.
+      { $limit: amount },
+      { $sort: { createdAt: -1 } },
+      //Finalement, on supprime les champs params_auteur et doc_auteur.
+      { $project: { params_auteur: 0, doc_auteur: 0 } },
+    ]);
+  } else {
+    //Execution d'une requête récupérant tout post, peu importe l'auteur et le domaine de son profil.
+    result = await postModel
+      .find({ ...optionalTimestampFilter })
+      .sort({ createdAt: -1 })
+      .limit(amount)
+      .exec();
+  }
 
   return result;
 };

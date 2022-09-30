@@ -70,4 +70,13 @@ router.delete(
   postController.deleteActivity
 );
 
+// GET /api/posts/flux/public/get/:amount
+router.get("/flux/public/get/:amount", postController.getPostFlux);
+
+// GET /api/posts/flux/public/get/:amount&:timestamp
+router.get(
+  "/flux/public/get/:amount&:timestamp",
+  postController.getPostFluxWithTimestamp
+);
+
 module.exports = router;
