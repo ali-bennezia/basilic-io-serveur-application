@@ -52,6 +52,10 @@ exports.schemaObject = {
     minlength: USER_PHONENBR_MIN_LENGTH,
     maxlength: USER_PHONENBR_MAX_LENGTH,
   },
+
+  suivis: [{ type: mongoose.Schema.Types.ObjectId, ref: "Utilisateur" }],
+  suivisPar: [{ type: mongoose.Schema.Types.ObjectId, ref: "Utilisateur" }],
+
   valide: { type: Boolean, required: false },
   codeValidation: { type: String, required: false },
   iatValidation: { type: Date, required: false },
@@ -101,6 +105,8 @@ const ignoredSchemaPropertiesInsertion = [
   "derniereAdresseIPDRM",
   "codeRM",
   "codeRMDate",
+  "suivis",
+  "suivisPar",
 ];
 
 for (const property in this.userInsertionDataForm) {

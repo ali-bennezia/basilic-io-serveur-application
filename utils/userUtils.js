@@ -109,6 +109,9 @@ exports.deleteUserFromId = async (id) => {
   //Suppression de tous les posts en asynchrone.
   postUtils.removePostsFromUserId(id);
 
+  //Suppression de tous les suivis.
+  await followUtils.clearTiedFollows(id);
+
   //Supression des médias liés aux paramètres.
   let params = await this.getUserParamsFromUserId(id);
   let paramMedias = [];

@@ -1,5 +1,6 @@
 //Utilitaires.
 const objectUtils = require("./objectUtils");
+const userUtils = require("./userUtils");
 
 //Modèles.
 const followModel = require("./../models/followModel");
@@ -57,6 +58,15 @@ exports.setUserIdAFollowUserIdB = async function (userIdA, userIdB) {
   if (await this.userIdFollows(userIdA, userIdB)) return;
 
   await followModel.create({ auteur: userIdA, cible: userIdB });
+
+  let follower = await userUtils.getUserFromId(userIdA);
+  let followed = await userUtils.getUserFromId(userIdB);
+
+  follower.suivis.push(followed._id);
+  followed.suivisPar.push(follower._id);
+
+  await follower.save();
+  await followed.save();
 };
 
 //Supprimer un suivi de userA à userB
@@ -78,4 +88,31 @@ exports.setUserIdAUnfollowUserIdB = async function (userIdA, userIdB) {
   //Execution.
   if (await this.userIdFollows(userIdA, userIdB))
     await followModel.findOneAndDelete({ auteur: userIdA, cible: userIdB });
+
+  let follower = await userUtils.getUserFromId(userIdA);
+  let followed = await userUtils.getUserFromId(userIdB);
+
+  follower.suivis.splice(follower.suivis.indexOf(followed._id), 1);
+  followed.suivisPar.splice(followed.suivis.indexOf(follower._id), 1);
+
+  await follower.save();
+  await followed.save();
+};
+
+//Supprimer tous les suivis et suivisPar liés à un utilisateur.
+exports.clearTiedFollows = async function (userId) {
+  await Promise.all(
+    (
+      await followModel
+        .find({
+          $or: [{ auteur: userId }, { cible: userId }],
+        })
+        .exec()
+    ).map(async function (el) {
+      return this.setUserIdAFollowUserIdB(
+        el.auteur.toString(),
+        el.cible.toString()
+      );
+    })
+  );
 };

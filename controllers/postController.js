@@ -445,3 +445,119 @@ exports.deleteActivity = async function (req, res) {
     return res.status(500).json("Internal Server Error");
   }
 };
+
+//TODO
+//GET /api/posts/flux/public/get/:amount
+exports.getPostFlux = async function (req, res) {
+  try {
+    //Sanitation des informations reçues.
+    let amnt = parseInt(req.params.amount);
+    if (
+      isNaN(amnt) ||
+      amnt <= 0 ||
+      amnt >
+        parseInt(process.env.POST_RESPONSES_MAX_LOAD_AMOUNT_PER_REQUEST ?? 10)
+    )
+      return res.status(400).json("Bad Request");
+
+    //Vérification des droits d'accès.
+    let tokenPayload = req.tokenPayload;
+    const tokenUserId = tokenPayload.userId || null;
+
+    /*let post = await postUtils.getPostFromId(req.params.postId);
+    let domain = await postUtils.getPostProfileDomain(req.params.postId);
+
+
+    if (
+      !userUtils.doesUserIdHaveAccessToUserIdDomain(
+        tokenPayload.userId,
+        domain.user._id.toString()
+      )
+    )
+      return res.status(403).json("Forbidden");*/
+
+    //Execution.
+
+    let resps = await postUtils.getPostResponses(req.params.postId, amnt);
+    let results = [];
+
+    for (let el of resps) {
+      results.push({
+        ...el._doc,
+        ...(await postUtils.getPostSecondaryData(el._id.toString())),
+        medias: await mediaUtils.getMediaLinkArrayFromMediaIdArray(el.medias),
+      });
+    }
+
+    if (tokenUserId != null)
+      results = await Promise.all(
+        results.map(
+          async (p) =>
+            await postUtils.populatePostUserIdActivityData(p, tokenUserId)
+        )
+      );
+
+    return res.status(200).json(results);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("Internal Server Error");
+  }
+};
+
+//GET /api/posts/flux/public/get/:postId&:amount&:timestamp
+exports.getPostResponsesWithTimestamp = async function (req, res) {
+  try {
+    //Sanitation des informations reçues.
+    let amnt = parseInt(req.params.amount);
+    if (
+      !objectUtils.isObjectValidStringId(req.params.postId) ||
+      isNaN(amnt) ||
+      amnt <= 0 ||
+      amnt >
+        parseInt(
+          process.env.POST_RESPONSES_MAX_LOAD_AMOUNT_PER_REQUEST ?? 10
+        ) ||
+      !objectUtils.isStringTimestamp(req.params.timestamp)
+    )
+      return res.status(400).json("Bad Request");
+
+    //Vérification de la validité des informations reçues.
+    if (!(await postUtils.doesPostWithIdExist(req.params.postId)))
+      return res.status(404).json("Not Found");
+
+    //Vérification des droits d'accès.
+    let post = await postUtils.getPostFromId(req.params.postId);
+    let domain = await postUtils.getPostProfileDomain(req.params.postId);
+    let tokenPayload = req.tokenPayload;
+
+    if (
+      !userUtils.doesUserIdHaveAccessToUserIdDomain(
+        tokenPayload.userId,
+        domain.user._id.toString()
+      )
+    )
+      return res.status(403).json("Forbidden");
+
+    //Execution.
+
+    let resps = await postUtils.getPostResponses(
+      req.params.postId,
+      amnt,
+      req.params.timestamp
+    );
+    let results = [];
+
+    for (let el of resps) {
+      results.push({
+        ...el._doc,
+        ...(await postUtils.getPostSecondaryData(el._id.toString())),
+        medias: await mediaUtils.getMediaLinkArrayFromMediaIdArray(el.medias),
+      });
+    }
+
+    return res.status(200).json(results);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("Internal Server Error");
+  }
+};

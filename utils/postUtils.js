@@ -225,6 +225,37 @@ exports.getPostResponses = async (postId, amount = 1, timestamp = null) => {
   return result;
 };
 
+//TODO
+/*
+  Récupères un liste de posts publics recemment publiés.
+    - amount: le nombre de réponses maximal à récuperer
+    - userId: l'identifiant de l'utilisateur voulant récuperer le flux
+    - timestamp: un instant précis. toute réponse datante de cet instant ou avant seront récupérées
+*/
+exports.getPostFlux = async (amount = 1, userId = null, timestamp = null) => {
+  //Sanitation des variables.
+  amount = parseInt(amount);
+  if (
+    (userId && !objectUtils.isObjectValidStringId(userId)) ||
+    isNaN(amount) ||
+    amount <= 0 ||
+    (timestamp != null && !objectUtils.isStringTimestamp(timestamp))
+  )
+    throw "Arguments invalides.";
+
+  let optionalTimestampFilter = timestamp
+    ? { createdAt: { $lte: timestamp } }
+    : {};
+
+  let result = await postModel
+    .find({ postCible: postId, ...optionalTimestampFilter })
+    .sort({ createdAt: -1 })
+    .limit(amount)
+    .exec();
+
+  return result;
+};
+
 /*
   Prend deux paramètres:
     - postData: objet représentant les données du post
