@@ -70,13 +70,27 @@ router.delete(
   postController.deleteActivity
 );
 
-// GET /api/posts/flux/public/get/:amount
-router.get("/flux/public/get/:amount", postController.getPostFlux);
-
 // GET /api/posts/flux/public/get/:amount&:timestamp
 router.get(
   "/flux/public/get/:amount&:timestamp",
   postController.getPostFluxWithTimestamp
+);
+
+// GET /api/posts/flux/public/get/:amount
+router.get("/flux/public/get/:amount", postController.getPostFlux);
+
+// GET /api/posts/flux/follow/get/:amount&:timestamp
+router.get(
+  "/flux/follow/get/:amount&:timestamp",
+  authMiddlewares.checkTokenAuthenticity,
+  postController.getPostFluxWithTimestampFollows
+);
+
+// GET /api/posts/flux/follow/get/:amount
+router.get(
+  "/flux/follow/get/:amount",
+  authMiddlewares.checkTokenAuthenticity,
+  postController.getPostFluxFollows
 );
 
 module.exports = router;

@@ -470,7 +470,7 @@ exports.getPostFlux = async function (req, res) {
     const user =
       tokenUserId != null ? await userUtils.getUserFromId(tokenUserId) : null;
     if (!user) tokenUserId = null;
-    else isAdmin = userUtils.isUserIdAdmin(tokenUserId);
+    else isAdmin = await userUtils.isUserIdAdmin(tokenUserId);
 
     //Execution.
 
@@ -482,9 +482,12 @@ exports.getPostFlux = async function (req, res) {
 
     for (let el of resps) {
       results.push({
+        _id: el._id,
         ...el._doc,
         ...(await postUtils.getPostSecondaryData(el._id.toString())),
         medias: await mediaUtils.getMediaLinkArrayFromMediaIdArray(el.medias),
+        createdAt: el.createdAt,
+        contenu: el.contenu,
       });
     }
 
@@ -531,7 +534,7 @@ exports.getPostFluxWithTimestamp = async function (req, res) {
     const user =
       tokenUserId != null ? await userUtils.getUserFromId(tokenUserId) : null;
     if (!user) tokenUserId = null;
-    else isAdmin = userUtils.isUserIdAdmin(tokenUserId);
+    else isAdmin = await userUtils.isUserIdAdmin(tokenUserId);
 
     //Execution.
 
@@ -548,9 +551,154 @@ exports.getPostFluxWithTimestamp = async function (req, res) {
 
     for (let el of resps) {
       results.push({
+        _id: el._id.toString(),
         ...el._doc,
         ...(await postUtils.getPostSecondaryData(el._id.toString())),
         medias: await mediaUtils.getMediaLinkArrayFromMediaIdArray(el.medias),
+        createdAt: el.createdAt,
+        contenu: el.contenu,
+      });
+    }
+
+    if (tokenUserId != null)
+      results = await Promise.all(
+        results.map(
+          async (p) =>
+            await postUtils.populatePostUserIdActivityData(p, tokenUserId)
+        )
+      );
+
+    //Envoi.
+    return res.status(200).json(results);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("Internal Server Error");
+  }
+};
+
+//GET /api/posts/flux/follows/get/:amount
+exports.getPostFluxFollows = async function (req, res) {
+  try {
+    //Sanitation des informations reçues.
+    let amnt = parseInt(req.params.amount);
+    if (
+      isNaN(amnt) ||
+      amnt <= 0 ||
+      amnt >
+        parseInt(process.env.POST_RESPONSES_MAX_LOAD_AMOUNT_PER_REQUEST ?? 10)
+    )
+      return res.status(400).json("Bad Request");
+
+    //Vérification des droits d'accès et de l'existence de l'utilisateur.
+    let token =
+      "authorization" in req.headers
+        ? req.headers.authorization.replace("Bearer ", "")
+        : null;
+
+    let tokenPayload = req.tokenPayload || null;
+    let tokenUserId =
+      tokenPayload != null && "userId" in tokenPayload
+        ? tokenPayload.userId
+        : null;
+    let isAdmin = false;
+
+    const user =
+      tokenUserId != null ? await userUtils.getUserFromId(tokenUserId) : null;
+    if (!user) tokenUserId = null;
+    else isAdmin = await userUtils.isUserIdAdmin(tokenUserId);
+
+    //Execution.
+
+    let resps = await postUtils.getPostFlux(
+      amnt,
+      tokenUserId,
+      isAdmin,
+      null,
+      true
+    );
+
+    //Traitement des résultats pour le front-end.
+
+    let results = [];
+
+    for (let el of resps) {
+      results.push({
+        _id: el._id,
+        ...el._doc,
+        ...(await postUtils.getPostSecondaryData(el._id.toString())),
+        medias: await mediaUtils.getMediaLinkArrayFromMediaIdArray(el.medias),
+        createdAt: el.createdAt,
+        contenu: el.contenu,
+      });
+    }
+
+    if (tokenUserId != null)
+      results = await Promise.all(
+        results.map(
+          async (p) =>
+            await postUtils.populatePostUserIdActivityData(p, tokenUserId)
+        )
+      );
+
+    //Envoi.
+    return res.status(200).json(results);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("Internal Server Error");
+  }
+};
+
+//GET /api/posts/flux/follow/get/:amount&:timestamp
+exports.getPostFluxWithTimestampFollows = async function (req, res) {
+  try {
+    //Sanitation des informations reçues.
+    let amnt = parseInt(req.params.amount);
+    if (
+      isNaN(amnt) ||
+      amnt <= 0 ||
+      amnt >
+        parseInt(
+          process.env.POST_RESPONSES_MAX_LOAD_AMOUNT_PER_REQUEST ?? 10
+        ) ||
+      !objectUtils.isStringTimestamp(req.params.timestamp)
+    )
+      return res.status(400).json("Bad Request");
+
+    //Vérification des droits d'accès et de l'existence de l'utilisateur.
+    let tokenPayload = req.tokenPayload || null;
+    let tokenUserId =
+      tokenPayload != null && "userId" in tokenPayload
+        ? tokenPayload.userId
+        : null;
+    let isAdmin = false;
+
+    const user =
+      tokenUserId != null ? await userUtils.getUserFromId(tokenUserId) : null;
+    if (!user) tokenUserId = null;
+    else isAdmin = await userUtils.isUserIdAdmin(tokenUserId);
+
+    //Execution.
+
+    let resps = await postUtils.getPostFlux(
+      amnt,
+      tokenUserId,
+      isAdmin,
+      req.params.timestamp,
+      true
+    );
+
+    //Traitement des résultats pour le front-end.
+
+    let results = [];
+
+    for (let el of resps) {
+      results.push({
+        _id: el._id,
+        ...el._doc,
+        ...(await postUtils.getPostSecondaryData(el._id.toString())),
+        medias: await mediaUtils.getMediaLinkArrayFromMediaIdArray(el.medias),
+        createdAt: el.createdAt,
+        contenu: el.contenu,
       });
     }
 

@@ -2,6 +2,9 @@
   Utilitaire pour ce qui concerne les posts.
 */
 
+//Librairies.
+const mongoose = require("mongoose");
+
 //Utilitaires.
 
 const objectUtils = require("./objectUtils");
@@ -225,7 +228,6 @@ exports.getPostResponses = async (postId, amount = 1, timestamp = null) => {
   return result;
 };
 
-//TODO
 /*
   Récupères un liste de posts publics recemment publiés.
     - amount: le nombre de réponses maximal à récuperer
@@ -237,15 +239,23 @@ exports.getPostFlux = async (
   amount = 1,
   userId = null,
   isUserAdmin = false,
-  timestamp = null
+  timestamp = null,
+  onlyFollowedByUser = false
 ) => {
+  console.log(amount);
+  console.log(userId);
+  console.log(isUserAdmin);
+  console.log(timestamp);
+  console.log(onlyFollowedByUser);
+
   //Sanitation des variables.
   amount = parseInt(amount);
   if (
     (userId && !objectUtils.isObjectValidStringId(userId)) ||
     isNaN(amount) ||
     amount <= 0 ||
-    (timestamp != null && !objectUtils.isStringTimestamp(timestamp))
+    (timestamp != null && !objectUtils.isStringTimestamp(timestamp)) ||
+    (onlyFollowedByUser === true && !userId)
   )
     throw "Arguments invalides.";
 
@@ -255,11 +265,18 @@ exports.getPostFlux = async (
 
   let result = [];
 
+  const filtreSuivis =
+    onlyFollowedByUser === true && userId != null
+      ? {
+          "doc_auteur.suivisPar": mongoose.Types.ObjectId(userId),
+        }
+      : {};
+
   if (!isUserAdmin) {
     //Execution d'une recherche en aggrégation pour tout post dont le domaine est accessible par l'utilisateur (userId).
     //Sinon, tout post public, si aucun utilisateur n'est fourni.
 
-    let filtreDomaine = [
+    const filtreDomaine = [
       //On prend, si le post est public.
       {
         $or: [
@@ -270,17 +287,14 @@ exports.getPostFlux = async (
       //Sinon, si l'utilisateur n'est pas anonyme, on prend le post si l'utilisateur a accès au domaine
       userId != null
         ? {
-            "doc_auteur.suivisPar": userId,
+            "doc_auteur.suivisPar": mongoose.Types.ObjectId(userId),
           }
         : {},
     ];
     if (userId == null) filtreDomaine.pop();
 
     result = await postModel.aggregate([
-      //Filtrage optionnel date post.
-      {
-        $match: { ...optionalTimestampFilter },
-      },
+      { $match: { ...optionalTimestampFilter } },
       //Jointure gauche avec les données et paramètres de l'auteur du post.
       {
         $lookup: {
@@ -303,21 +317,48 @@ exports.getPostFlux = async (
       {
         $match: {
           $or: filtreDomaine,
+          ...filtreSuivis,
         },
       },
+
+      //{ $match: { ...filtreSuivis } },
+
+      //On supprime les champs params_auteur et doc_auteur.
+      { $project: { params_auteur: 0, doc_auteur: 0 } },
       //On limite la quantité de posts, et on les organise du plus récent au plus ancien.
       { $limit: amount },
       { $sort: { createdAt: -1 } },
-      //Finalement, on supprime les champs params_auteur et doc_auteur.
-      { $project: { params_auteur: 0, doc_auteur: 0 } },
     ]);
   } else {
-    //Execution d'une requête récupérant tout post, peu importe l'auteur et le domaine de son profil.
-    result = await postModel
+    //Execution d'une requête récupérant tout post, peu importe l'auteur et le domaine de son profil. Filtrage pour posts d'auteurs suivis uniquement optionnel.
+    /*result = await postModel
       .find({ ...optionalTimestampFilter })
       .sort({ createdAt: -1 })
       .limit(amount)
-      .exec();
+      .exec();*/
+
+    result = await postModel.aggregate([
+      { $match: { ...optionalTimestampFilter } },
+      {
+        $lookup: {
+          from: "utilisateurs",
+          localField: "auteur",
+          foreignField: "_id",
+          as: "doc_auteur",
+        },
+      },
+      //Filtrage posts suivis ou non.
+      {
+        $match: {
+          ...filtreSuivis,
+        },
+      },
+      //On supprime les champs params_auteur et doc_auteur.
+      { $project: { doc_auteur: 0 } },
+      //On limite la quantité de posts, et on les organise du plus récent au plus ancien.
+      { $limit: amount },
+      { $sort: { createdAt: -1 } },
+    ]);
   }
 
   return result;
