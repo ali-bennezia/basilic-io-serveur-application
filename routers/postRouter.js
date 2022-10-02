@@ -93,4 +93,13 @@ router.get(
   postController.getPostFluxFollows
 );
 
+// GET /api/posts/flux/search/get/:amount&:timestamp&:keyword
+router.get(
+  "/flux/search/get/:amount&:timestamp&:keyword",
+  postController.getPostSearchWithTimestamp
+);
+
+// GET /api/posts/flux/follow/get/:amount&:keyword
+router.get("/flux/search/get/:amount&:keyword", postController.getPostSearch);
+
 module.exports = router;

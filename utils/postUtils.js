@@ -242,12 +242,6 @@ exports.getPostFlux = async (
   timestamp = null,
   onlyFollowedByUser = false
 ) => {
-  console.log(amount);
-  console.log(userId);
-  console.log(isUserAdmin);
-  console.log(timestamp);
-  console.log(onlyFollowedByUser);
-
   //Sanitation des variables.
   amount = parseInt(amount);
   if (
@@ -392,4 +386,111 @@ exports.populatePostUserIdActivityData = async (postData, userId) => {
       likePar: avis.nature === "like",
       dislikePar: avis.nature === "dislike",
     };
+};
+
+/*
+  Récupères un liste de posts publics contenant un mot-clé.
+    - amount: le nombre de réponses maximal à récuperer
+    - userId: l'identifiant de l'utilisateur voulant récuperer le flux
+    - isUserAdmin: booléenne, indiquant si l'utilisateur est admin et à donc accès a tous les domaines ou non
+    - timestamp: un instant précis. toute réponse datante de cet instant ou avant seront récupérées
+    - keyword: le mot clé pour lequel on effectue un recherche
+*/
+exports.getPostsLikeKeyword = async (
+  amount = 1,
+  userId = null,
+  isUserAdmin = false,
+  timestamp = null,
+  keyword = ""
+) => {
+  //Sanitation des variables.
+  amount = parseInt(amount);
+  if (
+    (userId && !objectUtils.isObjectValidStringId(userId)) ||
+    isNaN(amount) ||
+    amount <= 0 ||
+    (timestamp != null && !objectUtils.isStringTimestamp(timestamp))
+  )
+    throw "Arguments invalides.";
+
+  let optionalTimestampFilter = timestamp
+    ? { createdAt: { $lte: timestamp } }
+    : {};
+
+  let result = [];
+
+  if (!isUserAdmin) {
+    //Execution d'une recherche en aggrégation pour tout post dont le domaine est accessible par l'utilisateur (userId).
+    //Sinon, tout post public, si aucun utilisateur n'est fourni.
+
+    const filtreDomaine = [
+      //On prend, si le post est public.
+      {
+        $or: [
+          { "params_auteur.profilPublic": { $exists: false } },
+          { "params_auteur.profilPublic": true },
+        ],
+      },
+      //Sinon, si l'utilisateur n'est pas anonyme, on prend le post si l'utilisateur a accès au domaine
+      userId != null
+        ? {
+            "doc_auteur.suivisPar": mongoose.Types.ObjectId(userId),
+          }
+        : {},
+    ];
+    if (userId == null) filtreDomaine.pop();
+
+    result = await postModel.aggregate([
+      {
+        $match: {
+          ...optionalTimestampFilter,
+          contenu: { $regex: `.*${keyword}.*` },
+        },
+      },
+      //Jointure gauche avec les données et paramètres de l'auteur du post.
+      {
+        $lookup: {
+          from: "utilisateurs",
+          localField: "auteur",
+          foreignField: "_id",
+          as: "doc_auteur",
+        },
+      },
+      {
+        $lookup: {
+          from: "paramsutilisateurs",
+          localField: "auteur",
+          foreignField: "utilisateur",
+          as: "params_auteur",
+        },
+      },
+
+      //Filtrage, selon le domaine du post et userId.
+      {
+        $match: {
+          $or: filtreDomaine,
+        },
+      },
+
+      //On supprime les champs params_auteur et doc_auteur.
+      { $project: { params_auteur: 0, doc_auteur: 0 } },
+      //On limite la quantité de posts, et on les organise du plus récent au plus ancien.
+      { $limit: amount },
+      { $sort: { createdAt: -1 } },
+    ]);
+  } else {
+    //Execution d'une requête récupérant tout post, peu importe l'auteur et le domaine de son profil. Filtrage pour posts d'auteurs suivis uniquement optionnel.
+
+    result = await postModel.aggregate([
+      {
+        $match: { ...optionalTimestampFilter },
+        contenu: { $regex: `.*${keyword}.*` },
+      },
+      //On limite la quantité de posts, et on les organise du plus récent au plus ancien.
+      { $limit: amount },
+      { $sort: { createdAt: -1 } },
+    ]);
+  }
+
+  return result;
 };

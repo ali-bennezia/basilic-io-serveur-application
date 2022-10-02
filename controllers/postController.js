@@ -717,3 +717,151 @@ exports.getPostFluxWithTimestampFollows = async function (req, res) {
     return res.status(500).json("Internal Server Error");
   }
 };
+
+//GET /api/posts/flux/search/get/:amount&keyword
+exports.getPostSearch = async function (req, res) {
+  try {
+    //Sanitation des informations reçues.
+    let amnt = parseInt(req.params.amount);
+    if (
+      isNaN(amnt) ||
+      amnt <= 0 ||
+      amnt >
+        parseInt(
+          process.env.POST_RESPONSES_MAX_LOAD_AMOUNT_PER_REQUEST ?? 10
+        ) ||
+      !"keyword" in req.params ||
+      !objectUtils.isObjectString(req.params.keyword)
+    )
+      return res.status(400).json("Bad Request");
+
+    //Vérification des droits d'accès et de l'existence de l'utilisateur.
+    let tokenPayload = req.tokenPayload || null;
+    let tokenUserId =
+      tokenPayload != null && "userId" in tokenPayload
+        ? tokenPayload.userId
+        : null;
+    let isAdmin = false;
+
+    const user =
+      tokenUserId != null ? await userUtils.getUserFromId(tokenUserId) : null;
+    if (!user) tokenUserId = null;
+    else isAdmin = await userUtils.isUserIdAdmin(tokenUserId);
+
+    //Execution.
+
+    let resps = await postUtils.getPostsLikeKeyword(
+      amnt,
+      tokenUserId,
+      isAdmin,
+      null,
+      req.params.keyword
+    ); // await postUtils.getPostFlux(amnt, tokenUserId, isAdmin);
+
+    //Traitement des résultats pour le front-end.
+
+    let results = [];
+
+    for (let el of resps) {
+      results.push({
+        _id: el._id,
+        ...el._doc,
+        ...(await postUtils.getPostSecondaryData(el._id.toString())),
+        medias: await mediaUtils.getMediaLinkArrayFromMediaIdArray(el.medias),
+        createdAt: el.createdAt,
+        contenu: el.contenu,
+      });
+    }
+
+    if (tokenUserId != null)
+      results = await Promise.all(
+        results.map(
+          async (p) =>
+            await postUtils.populatePostUserIdActivityData(p, tokenUserId)
+        )
+      );
+
+    //Envoi.
+    return res.status(200).json(results);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("Internal Server Error");
+  }
+};
+
+//GET /api/posts/flux/search/get/:amount&:timestamp&keyword
+exports.getPostSearchWithTimestamp = async function (req, res) {
+  try {
+    //Sanitation des informations reçues.
+    let amnt = parseInt(req.params.amount);
+    if (
+      isNaN(amnt) ||
+      amnt <= 0 ||
+      amnt >
+        parseInt(
+          process.env.POST_RESPONSES_MAX_LOAD_AMOUNT_PER_REQUEST ?? 10
+        ) ||
+      !objectUtils.isStringTimestamp(req.params.timestamp) ||
+      !"keyword" in req.params ||
+      !objectUtils.isObjectString(req.params.keyword)
+    )
+      return res.status(400).json("Bad Request");
+
+    //Vérification des droits d'accès et de l'existence de l'utilisateur.
+    let tokenPayload = req.tokenPayload || null;
+    let tokenUserId =
+      tokenPayload != null && "userId" in tokenPayload
+        ? tokenPayload.userId
+        : null;
+    let isAdmin = false;
+
+    const user =
+      tokenUserId != null ? await userUtils.getUserFromId(tokenUserId) : null;
+    if (!user) tokenUserId = null;
+    else isAdmin = await userUtils.isUserIdAdmin(tokenUserId);
+
+    //Execution.
+
+    let resps = await postUtils.getPostsLikeKeyword(
+      amnt,
+      tokenUserId,
+      isAdmin,
+      req.params.timestamp,
+      req.params.keyword
+    ); /*.getPostFlux(
+      amnt,
+      tokenUserId,
+      isAdmin,
+      req.params.timestamp
+    );*/
+
+    //Traitement des résultats pour le front-end.
+
+    let results = [];
+
+    for (let el of resps) {
+      results.push({
+        _id: el._id.toString(),
+        ...el._doc,
+        ...(await postUtils.getPostSecondaryData(el._id.toString())),
+        medias: await mediaUtils.getMediaLinkArrayFromMediaIdArray(el.medias),
+        createdAt: el.createdAt,
+        contenu: el.contenu,
+      });
+    }
+
+    if (tokenUserId != null)
+      results = await Promise.all(
+        results.map(
+          async (p) =>
+            await postUtils.populatePostUserIdActivityData(p, tokenUserId)
+        )
+      );
+
+    //Envoi.
+    return res.status(200).json(results);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("Internal Server Error");
+  }
+};
