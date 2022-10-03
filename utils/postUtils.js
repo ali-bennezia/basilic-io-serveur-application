@@ -443,7 +443,7 @@ exports.getPostsLikeKeyword = async (
     result = await postModel.aggregate([
       {
         $match: {
-          //contenu: { $regex: `.*${keyword}.*` },
+          contenu: { $regex: `.*${keyword}.*` },
           ...optionalTimestampFilter,
         },
       },
