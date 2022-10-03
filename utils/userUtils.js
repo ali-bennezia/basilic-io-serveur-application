@@ -135,13 +135,10 @@ exports.deleteUser = async (user) => {
 };
 
 exports.doesUserIdHaveAccessToUserIdDomain = async (userId, domainUserId) => {
-  if (
-    !objectUtils.isObjectValidStringId(userId) ||
-    !objectUtils.isObjectValidStringId(domainUserId)
-  )
+  if (!objectUtils.isObjectValidStringId(domainUserId))
     throw "Arguments invalides.";
 
-  let userIsAdmin = await this.isUserIdAdmin(userId);
+  let userIsAdmin = userId != null && (await this.isUserIdAdmin(userId));
   let domainUser = await this.getUserParamsFromUserId(domainUserId);
 
   let publicDomain =
@@ -149,9 +146,10 @@ exports.doesUserIdHaveAccessToUserIdDomain = async (userId, domainUserId) => {
 
   if (!publicDomain) {
     if (
-      !userIsAdmin &&
-      !(await followUtils.userIdFollows(userId, domainUserId)) &&
-      userId != domainUserId
+      userId === null ||
+      (!userIsAdmin &&
+        !(await followUtils.userIdFollows(userId, domainUserId)) &&
+        userId != domainUserId)
     )
       return false;
   }

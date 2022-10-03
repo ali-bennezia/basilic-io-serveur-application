@@ -45,16 +45,11 @@ router.delete(
 // GET /api/posts/responses/:postId&:amount&:timestamp
 router.get(
   "/responses/:postId&:amount&:timestamp",
-  authMiddlewares.checkTokenAuthenticity,
   postController.getPostResponsesWithTimestamp
 );
 
 // GET /api/posts/responses/:postId&:amount
-router.get(
-  "/responses/:postId&:amount",
-  authMiddlewares.checkTokenAuthenticity,
-  postController.getPostResponses
-);
+router.get("/responses/:postId&:amount", postController.getPostResponses);
 
 // POST /api/posts/activities/create/:postId&:nature
 router.post(

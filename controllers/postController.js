@@ -256,12 +256,19 @@ exports.getPostResponses = async function (req, res) {
     //Vérification des droits d'accès.
     let post = await postUtils.getPostFromId(req.params.postId);
     let domain = await postUtils.getPostProfileDomain(req.params.postId);
-    let tokenPayload = req.tokenPayload;
-    const tokenUserId = tokenPayload.userId || null;
+
+    const token =
+      "authorization" in req.headers
+        ? req.headers.authorization.replace("Bearer ", "")
+        : null;
+    const tokenPayload = token
+      ? await authUtils.authentifySessionToken(token)
+      : null;
+    const tokenUserId = tokenPayload != null ? tokenPayload.userId : null;
 
     if (
       !userUtils.doesUserIdHaveAccessToUserIdDomain(
-        tokenPayload.userId,
+        tokenUserId,
         domain.user._id.toString()
       )
     )
@@ -319,11 +326,17 @@ exports.getPostResponsesWithTimestamp = async function (req, res) {
     //Vérification des droits d'accès.
     let post = await postUtils.getPostFromId(req.params.postId);
     let domain = await postUtils.getPostProfileDomain(req.params.postId);
-    let tokenPayload = req.tokenPayload;
+    const token =
+      "authorization" in req.headers
+        ? req.headers.authorization.replace("Bearer ", "")
+        : null;
+    const tokenPayload = token
+      ? await authUtils.authentifySessionToken(token)
+      : null;
 
     if (
       !userUtils.doesUserIdHaveAccessToUserIdDomain(
-        tokenPayload.userId,
+        tokenPayload != null ? tokenPayload.userId : null,
         domain.user._id.toString()
       )
     )

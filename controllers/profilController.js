@@ -46,20 +46,19 @@ exports.getProfile = async function (req, res) {
     if (!"id" in req.params || !req.params.id || !user || !userParams)
       return res.status(400).json("Bad Request");
 
-    let profileData = await objectUtils.getUserSummaryProfileData(
-      user,
-      userParams
-    );
+    let profileData = {
+      ...(await objectUtils.getUserSummaryProfileData(user, userParams)),
+      domaineVisible: await userUtils.doesUserIdHaveAccessToUserIdDomain(
+        tokenPayload != null ? tokenPayload.userId : null,
+        user._id.toString()
+      ),
+    };
 
     if (tokenPayload != null)
       profileData = {
         ...profileData,
         token: {
           suisProfil: await followUtils.userIdFollows(
-            tokenPayload.userId,
-            user._id.toString()
-          ),
-          domaineVisible: await userUtils.doesUserIdHaveAccessToUserIdDomain(
             tokenPayload.userId,
             user._id.toString()
           ),
@@ -102,9 +101,14 @@ exports.getProfilePosts = async function (req, res) {
 
     let public = "profilPublic" in userParams ? userParams.profilPublic : true;
 
-    const token = req.headers.authorization.replace("Bearer ", "") || null;
-    const payload = (await authUtils.authentifySessionToken(token)) || null;
-    const tokenUserId = payload.userId || null;
+    const token =
+      "authorization" in req.headers
+        ? req.headers.authorization.replace("Bearer ", "")
+        : null;
+    const payload = token
+      ? await authUtils.authentifySessionToken(token)
+      : null;
+    const tokenUserId = payload != null ? payload.userId : null;
 
     if (!public) {
       if (
@@ -209,9 +213,14 @@ exports.getProfilePostsWithTimestamp = async function (req, res) {
 
     let public = "profilPublic" in userParams ? userParams.profilPublic : true;
 
-    const token = req.headers.authorization.replace("Bearer ", "") || null;
-    const payload = (await authUtils.authentifySessionToken(token)) || null;
-    const tokenUserId = payload.userId || null;
+    const token =
+      "authorization" in req.headers
+        ? req.headers.authorization.replace("Bearer ", "")
+        : null;
+    const payload = token
+      ? await authUtils.authentifySessionToken(token)
+      : null;
+    const tokenUserId = payload != null ? payload.userId : null;
 
     if (!public) {
       if (
