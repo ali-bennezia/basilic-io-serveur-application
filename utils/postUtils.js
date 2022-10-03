@@ -254,7 +254,7 @@ exports.getPostFlux = async (
     throw "Arguments invalides.";
 
   let optionalTimestampFilter = timestamp
-    ? { createdAt: { $lte: timestamp } }
+    ? { createdAt: { $lte: new Date(timestamp) } }
     : {};
 
   let result = [];
@@ -414,7 +414,7 @@ exports.getPostsLikeKeyword = async (
     throw "Arguments invalides.";
 
   let optionalTimestampFilter = timestamp
-    ? { createdAt: { $lte: timestamp } }
+    ? { createdAt: { $lte: new Date(timestamp) } }
     : {};
 
   let result = [];
@@ -443,8 +443,8 @@ exports.getPostsLikeKeyword = async (
     result = await postModel.aggregate([
       {
         $match: {
+          //contenu: { $regex: `.*${keyword}.*` },
           ...optionalTimestampFilter,
-          contenu: { $regex: `.*${keyword}.*` },
         },
       },
       //Jointure gauche avec les données et paramètres de l'auteur du post.

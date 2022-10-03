@@ -828,12 +828,7 @@ exports.getPostSearchWithTimestamp = async function (req, res) {
       isAdmin,
       req.params.timestamp,
       req.params.keyword
-    ); /*.getPostFlux(
-      amnt,
-      tokenUserId,
-      isAdmin,
-      req.params.timestamp
-    );*/
+    );
 
     //Traitement des résultats pour le front-end.
 
