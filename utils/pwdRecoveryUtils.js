@@ -53,8 +53,8 @@ exports.sendEmailKey = async (key, userId, recipientMail) => {
     from: `"Basilic" ${process.env.EMAIL_USER}`,
     to: recipientMail,
     subject: "Basilic - Clée de réinitialisation",
-    text: `Une demande de réinitialisation de mot de passe à été faite sur votre compte. Allez sur le lien ${process.env.WEB_URL_ROOT}api/auth/recpwd/entry&${userId}&${key} afin de le réinitialiser. Si vous n'êtes pas propriétaire de ce compte, veuillez ignorer ce message.`,
-    html: `<p>Une demande de réinitialisation de mot de passe à été faite sur votre compte. Allez sur </p><a href='${process.env.WEB_URL_ROOT}api/auth/recpwd/entry&${userId}&${key}'>ce lien</a><p> afin de le réinitialiser. Si vous n'êtes pas propriétaire de ce compte, veuillez ignorer ce message.</p>`,
+    text: `Une demande de réinitialisation de mot de passe à été faite sur votre compte. Allez sur le lien ${process.env.WEB_URL_ROOT}cleeauth/${userId}&${key} afin de le réinitialiser. Si vous n'êtes pas propriétaire de ce compte, veuillez ignorer ce message.`,
+    html: `<p>Une demande de réinitialisation de mot de passe à été faite sur votre compte. Allez sur </p><a href='${process.env.WEB_URL_ROOT}cleeauth/${userId}&${key}'>ce lien</a><p> afin de le réinitialiser. Si vous n'êtes pas propriétaire de ce compte, veuillez ignorer ce message.</p>`,
   });
 };
 
