@@ -20,9 +20,9 @@ router.post(
   authController.sendPasswordRecoveryKey
 );
 
-//POST /api/auth/recpwd/entry&:userId&:key
+//POST /api/auth/recpwd/entry&:identifierType&:identifier&:key
 router.post(
-  "/recpwd/entry&:userId&:key",
+  "/recpwd/entry&:identifierType&:identifier&:key",
   authMdlw.noToken,
   authController.authentifyPasswordRecoveryKey
 );

@@ -106,7 +106,7 @@ exports.authentifyToken = async function (req, res) {
   L'utilisateur ne doit envoyer aucun token.
   Dans le corp de la requête doit se trouver un objet de la forme:
   {
-    nomUtilisateur|numeroTelephone|email:<valeur>
+    nomUtilisateur|numeroTelephone|email|userId:<valeur>
   }
 */
 exports.sendPasswordRecoveryKey = async function (req, res) {
@@ -118,6 +118,7 @@ exports.sendPasswordRecoveryKey = async function (req, res) {
         "nomUtilisateur",
         "numeroTelephone",
         "email",
+        "id",
       ]) ||
       Object.keys(req.body).length != 1 ||
       !"mode" in req.params ||
@@ -128,7 +129,10 @@ exports.sendPasswordRecoveryKey = async function (req, res) {
 
     //Validation des valeurs reçues.
     let identifier = req.body;
-    let usr = await userModel.model.findOne(identifier).exec();
+    let usr =
+      "id" in identifier
+        ? await userModel.model.findById(identifier.id)
+        : await userModel.model.findOne(identifier).exec();
     if (usr == null) return res.status(200).json("OK");
     if ((!"email" in usr && md == 0) || (!"numeroTelephone" in usr && md == 1))
       return res.status(200).json("OK");
@@ -165,7 +169,7 @@ exports.sendPasswordRecoveryKey = async function (req, res) {
   }
 };
 
-//POST /api/auth/recpwd/entry&:userId&:key
+//POST /api/auth/recpwd/entry&:identifierType&:identifier&:key
 /*
   Réinitialisation de mot de passe à l'aide d'une clé. Si la réponse est favorable, la couche interface doit l'afficher, et un code de réinitialisation de mot de
   passe doit être envoyé à l'utilisateur. Il doit être valable 10 minutes.
@@ -173,18 +177,29 @@ exports.sendPasswordRecoveryKey = async function (req, res) {
 exports.authentifyPasswordRecoveryKey = async function (req, res) {
   try {
     //Sanitation des valeurs reçues.
+    let identifierType = parseInt(req.params.identifierType);
     if (
+      isNaN(identifierType) ||
+      identifierType < 0 ||
+      identifierType > 3 ||
       !"key" in req.params ||
       !objectUtils.isObjectString(req.params.key) ||
-      !"userId" in req.params ||
-      !objectUtils.isObjectValidStringId(req.params.userId)
+      !"identifier" in req.params ||
+      !objectUtils.isObjectValidStringId(req.params.identifier)
     )
       return res.status(400).json("Bad Request");
 
     let currentTime = new Date();
 
     //Validation des valeurs reçues.
-    let usr = await userModel.model.findById(req.params.userId);
+    let idObj = {};
+    idObj[
+      ["nomUtilisateur", "numeroTelephone", "email", "id"][identifierType]
+    ] = req.params.identifier;
+    let usr =
+      identifierType === 3
+        ? await userModel.model.findById(req.params.identifier)
+        : await userModel.model.find(idObj);
 
     if (
       !usr ||
