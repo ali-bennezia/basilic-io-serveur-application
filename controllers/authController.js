@@ -232,7 +232,7 @@ exports.authentifyPasswordRecoveryKey = async function (req, res) {
   }
 };
 
-//POST /api/auth/recpwd/reinit&:userId&:code
+//POST /api/auth/recpwd/reinit/:identifierType&:identifier&:code
 /*
   Permet de réinitialiser le mot de passe d'un compte.
   Le corps doit contenir un objet de la forme:
@@ -243,17 +243,27 @@ exports.authentifyPasswordRecoveryKey = async function (req, res) {
 exports.reinitPassword = async function (req, res) {
   try {
     //Sanitation des valeurs reçues.
+    let identifierType = parseInt(req.params.identifierType);
     if (
-      !"userId" in req.params ||
+      isNaN(identifierType) ||
+      identifierType < 0 ||
+      identifierType > 3 ||
+      !"identifier" in req.params ||
       !"code" in req.params ||
-      !objectUtils.isObjectValidStringId(req.params.userId) ||
       !"newPassword" in req.body ||
       !objectUtils.isObjectString(req.body.newPassword)
     )
       return res.status(400).json("Bad Request");
 
     //Validation des valeurs reçues.
-    let usr = await userUtils.getUserFromId(req.params.userId);
+    let idObj = {};
+    idObj[
+      ["nomUtilisateur", "numeroTelephone", "email", "id"][identifierType]
+    ] = req.params.identifier;
+    let usr =
+      identifierType === 3
+        ? await userModel.model.findById(req.params.identifier)
+        : await userModel.model.find(idObj);
     let currentDate = new Date();
     if (
       !usr ||

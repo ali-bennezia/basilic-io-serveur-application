@@ -27,7 +27,10 @@ router.post(
   authController.authentifyPasswordRecoveryKey
 );
 
-//POST /api/auth/recpwd/reinit&:userId&:code
-router.post("/recpwd/reinit&:userId&:code", authController.reinitPassword);
+//POST /api/auth/recpwd/reinit/:identifierType&:identifier&:code
+router.post(
+  "/recpwd/reinit/:identifierType&:identifier&:code",
+  authController.reinitPassword
+);
 
 module.exports = router;
