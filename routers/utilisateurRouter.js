@@ -15,6 +15,7 @@ const authentificationMiddlewares = require("./../middlewares/authentificationMi
 router.post(
   "/register",
   authentificationMiddlewares.noToken,
+  authentificationMiddlewares.captchaCheck,
   utilisateurController.registerUser
 );
 
@@ -22,6 +23,7 @@ router.post(
 router.post(
   "/signin",
   authentificationMiddlewares.noToken,
+  authentificationMiddlewares.captchaCheck,
   utilisateurController.signinUser
 );
 

@@ -74,10 +74,10 @@ exports.registerUser = async function (req, res) {
 */
 exports.signinUser = async function (req, res) {
   try {
+    //Vérification données envoyées.
     let identifier = objectUtils.getUniqueUserData(req.body);
     if (!objectUtils.containsAllNecessarySigninData(req.body)) {
-      res.status(400).json("Bad Request");
-      return;
+      return res.status(400).json("Bad Request");
     }
 
     let rememberMe =

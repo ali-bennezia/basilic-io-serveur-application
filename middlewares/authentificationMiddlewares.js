@@ -60,3 +60,15 @@ exports.checkTokenAccountInvalidity = async function (req, res, next) {
     res.status(401).json("Invalid Token");
   }
 };
+
+exports.captchaCheck = async function (req, res, next) {
+  //Vérification captcha.
+  if (!"captcha" in req.body)
+    return res.status(422).json("Unprocessable Entity");
+  let captcha = req.body.captcha;
+  delete req.body.captcha;
+  let result = await authUtils.checkCaptcha(captcha);
+
+  if (!result) return res.status(422).json("Unprocessable Entity");
+  next();
+};

@@ -5,6 +5,7 @@
 //Librairies.
 
 const JWT = require("jsonwebtoken");
+const axios = require("axios");
 
 //Utilitaires.
 
@@ -64,4 +65,19 @@ exports.isTokenAccountValid = async (token) => {
   let payload = await this.authentifySessionToken(token);
   let user = await userModel.model.findOne({ _id: payload.userId });
   return user && "valide" in user && user.valide == true;
+};
+
+exports.checkCaptcha = async (captcha) => {
+  try {
+    let res = await axios.post(
+      "https://www.google.com/recaptcha/api/siteverify",
+      new URLSearchParams({
+        secret: process.env.CAPTCHA_SECRET_KEY,
+        response: captcha,
+      })
+    );
+    return res.data.success;
+  } catch (err) {
+    return false;
+  }
 };
