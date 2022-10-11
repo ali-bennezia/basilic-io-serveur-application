@@ -330,14 +330,17 @@ exports.deleteUser = async function (req, res) {
       !"id" in req.params ||
       !req.params.id ||
       !tokenUser ||
-      !"motDePasse" in req.body ||
-      !req.body.motDePasse
+      ((!"motDePasse" in req.body || !req.body.motDePasse) &&
+        !"administrateur" in tokenUser &&
+        !tokenUser.administrateur)
     )
       return res.status(400).json("Bad Request");
+
     if (
-      (user._id.toString() != tokenUser._id.toString() &&
-        !tokenUser.administrateur) ||
-      !bcrypt.compareSync(req.body.motDePasse, tokenUser.motDePasse)
+      !tokenUser.administrateur &&
+      (user._id.toString() != tokenUser._id.toString() ||
+        !("motDePasse" in req.body) ||
+        !bcrypt.compareSync(req.body.motDePasse, tokenUser.motDePasse))
     )
       return res.status(403).json("Incorrect Password");
 

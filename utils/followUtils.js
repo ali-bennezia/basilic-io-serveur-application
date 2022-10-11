@@ -108,8 +108,8 @@ exports.clearTiedFollows = async function (userId) {
           $or: [{ auteur: userId }, { cible: userId }],
         })
         .exec()
-    ).map(async function (el) {
-      return this.setUserIdAFollowUserIdB(
+    ).map(async (el) => {
+      return this.setUserIdAUnfollowUserIdB(
         el.auteur.toString(),
         el.cible.toString()
       );
