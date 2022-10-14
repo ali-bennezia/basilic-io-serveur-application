@@ -1,6 +1,7 @@
 const compulsoryEnvVariables = [
   "MONGO_URI",
   "PRIVATE_KEY",
+  "DKIM_EMAIL_PRIVATE_KEY",
   "TWILIO_ACCOUNT_SSID",
   "TWILIO_AUTH_TOKEN",
   "TWILIO_PHONE_NUMBER",

@@ -15,9 +15,16 @@ const twilio = require("twilio");
 //Configuration initiale.
 
 const transport = nodemailer.createTransport({
-  sendmail: true,
-  newline: "true",
-  path: "/usr/sbin/sendmail",
+  host: "127.0.0.1",
+  port: 25,
+  secure: true,
+  dkim: {
+    domainName: "basilic-io.fr",
+    keySelector: "default",
+    privateKey: process.env.DKIM_EMAIL_PRIVATE_KEY,
+  },
+
+  tls: { rejectUnauthorized: true },
 });
 
 const twilioClient = twilio(
