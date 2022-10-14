@@ -15,13 +15,9 @@ const twilio = require("twilio");
 //Configuration initiale.
 
 const transport = nodemailer.createTransport({
-  host: process.env.EMAIL_SMTP_HOST,
-  port: process.env.EMAIL_SMTP_PORT,
-  secure: process.env.EMAIL_SMTP_PORT == 465,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
+  sendmail: true,
+  newline: "true",
+  path: "/usr/sbin/sendmail",
 });
 
 const twilioClient = twilio(
@@ -50,7 +46,7 @@ exports.sendEmailKey = async (key, userId, recipientMail) => {
     throw "Identifiant d'utilisateur invalide";
 
   let info = await transport.sendMail({
-    from: `"Basilic" ${process.env.EMAIL_USER}`,
+    from: `nepasrepondre@basilic-io.fr`,
     to: recipientMail,
     subject: "Basilic - Clée de réinitialisation",
     text: `Une demande de réinitialisation de mot de passe à été faite sur votre compte. Allez sur le lien ${process.env.WEB_URL_ROOT}entree/3&${userId}&${key} afin de le réinitialiser. Si vous n'êtes pas propriétaire de ce compte, veuillez ignorer ce message.`,

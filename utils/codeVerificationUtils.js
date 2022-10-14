@@ -14,13 +14,9 @@ const twilio = require("twilio");
 //Configuration initiale.
 
 const transport = nodemailer.createTransport({
-  host: process.env.EMAIL_SMTP_HOST,
-  port: process.env.EMAIL_SMTP_PORT,
-  secure: process.env.EMAIL_SMTP_PORT == 465,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
+  sendmail: true,
+  newline: "unix",
+  path: "/usr/sbin/sendmail",
 });
 
 const twilioClient = twilio(
@@ -37,7 +33,7 @@ exports.generateCode = () =>
 
 exports.sendEmailCode = async (code, recipientMail) => {
   let info = await transport.sendMail({
-    from: `${process.env.EMAIL_USER}`,
+    from: `nepasrepondre@basilic-io.fr`,
     to: recipientMail,
     subject: "Basilic - Code de validation",
     text: `Un compte lié à votre adresse email sur notre réseau social Basilic.io est sur le point d'être validé. Utilisez le code ${code} afin de le valider. Si vous n'êtes pas propriétaire de ce compte, veuillez ignorer ce message.`,
