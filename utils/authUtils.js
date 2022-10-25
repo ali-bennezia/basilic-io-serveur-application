@@ -22,7 +22,8 @@ exports.generateUserSession = async (
 ) => {
   if (
     !objectUtils.containsUniqueUserData(user) ||
-    !(await userModel.model.findOne(objectUtils.getUniqueUserData(user)))
+    !(await userModel.model.findOne(objectUtils.getUniqueUserData(user))) ||
+    !"_id" in user
   )
     throw "L'objet envoyé ne représente pas un utilisateur.";
 

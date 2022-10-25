@@ -63,7 +63,8 @@ exports.schemaObject = {
 
   /*
     Ici, DRM est l'acronyme pour "Demande de Réinitialisation de Mot de passe".
-    Ce sont des valeurs stoquées sur la base de donnée et qui permettent de gérer les demandes de réinitialisation de mots de passe, tout simplement.
+    Ce sont des valeurs stoquées sur la base de donnée et qui permettent de gérer les demandes de réinitialisation de mots de passe.
+    La clée est hashé par bcrypt.
   */
   derniereDateDRM: { type: Date, required: false },
   derniereCleeDRM: { type: String, required: false },

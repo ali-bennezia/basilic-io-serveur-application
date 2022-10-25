@@ -28,4 +28,3 @@ schema.pre("save", async function () {
 
 module.exports = mongoose.model("MessageTchat", schema);
 
-//TODO gérer CRUD
