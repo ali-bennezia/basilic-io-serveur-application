@@ -53,14 +53,14 @@ mongoose
   .then(() => {
     console.log("Connexion à la base de donnée établie avec succès.");
 
-    //Lancement connexion non sécurisée.
+    //Lancement écoute non sécurisée.
     app.listen(LISTEN_PORT, () => {
       console.log(
         `Application lancée et à l'écoute sur le port ${LISTEN_PORT}.`
       );
     });
 
-    //Lancement connexion sécurisée.
+    //Lancement écoute sécurisée.
     https
       .createServer(
         {
