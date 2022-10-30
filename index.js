@@ -69,15 +69,15 @@ mongoose
         },
         app
       )
-      .listen(LISTEN_PORT, () => {
+      .listen(HTTPS_LISTEN_PORT, () => {
         console.log(
-          `(HTTPS) Application lancée et à l'écoute sur le port ${LISTEN_PORT}.`
+          `(HTTPS) Application lancée et à l'écoute sur le port ${HTTPS_LISTEN_PORT}.`
         );
       });
   })
   .catch((err) => {
     console.log(
-      `Erreur lors de la tentative de connection à la base de donnée: ${err}`
+      `Erreur lors de la tentative de connexion à la base de donnée: ${err}`
     );
   });
 
