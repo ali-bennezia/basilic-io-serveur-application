@@ -1,6 +1,8 @@
 //Initialization.
 
 const express = require("express");
+const https = require("https");
+const fs = require("fs");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const multer = require("multer");
@@ -10,12 +12,12 @@ const multer = require("multer");
 const configUtils = require("./utils/configUtils");
 
 //Configuration initiale.
-
 const app = express();
 dotenv.config();
 configUtils.checkEnvVariables();
 
 const LISTEN_PORT = process.env.LISTEN_PORT ?? 5000;
+const HTTPS_LISTEN_PORT = process.env.HTTPS_LISTEN_PORT ?? 5443;
 const MONGO_URI = process.env.MONGO_URI;
 
 //Pour la gestion des requêtes application/json
@@ -51,11 +53,27 @@ mongoose
   .then(() => {
     console.log("Connexion à la base de donnée établie avec succès.");
 
+    //Lancement connexion non sécurisée.
     app.listen(LISTEN_PORT, () => {
       console.log(
         `Application lancée et à l'écoute sur le port ${LISTEN_PORT}.`
       );
     });
+
+    //Lancement connexion sécurisée.
+    https
+      .createServer(
+        {
+          key: fs.readFileSync(process.env.HTTPS_PRIVATE_KEY_FILE),
+          cert: fs.readFileSync(process.env.HTTPS_CERTIFICATE_FILE),
+        },
+        app
+      )
+      .listen(LISTEN_PORT, () => {
+        console.log(
+          `(HTTPS) Application lancée et à l'écoute sur le port ${LISTEN_PORT}.`
+        );
+      });
   })
   .catch((err) => {
     console.log(
