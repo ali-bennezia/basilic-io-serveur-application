@@ -24,7 +24,7 @@ const transport = nodemailer.createTransport({
     privateKey: process.env.DKIM_EMAIL_PRIVATE_KEY,
   },
 
-  tls: { rejectUnauthorized: true },
+  tls: { rejectUnauthorized: false },
 });
 
 const twilioClient = twilio(
