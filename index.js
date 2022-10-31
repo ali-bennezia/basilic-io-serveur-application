@@ -65,7 +65,8 @@ mongoose
       .createServer(
         {
           key: fs.readFileSync(process.env.HTTPS_PRIVATE_KEY_FILE),
-          cert: fs.readFileSync(process.env.HTTPS_CERTIFICATE_FILE),
+          cert: fs.readFileSync(process.env.HTTPS_FULLCHAIN_FILE),
+          ca: fs.readFileSync(process.env.HTTPS_CHAIN_FILE),
         },
         app
       )
